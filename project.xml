@@ -156,8 +156,10 @@ bool isCloseToExit(Coordinates point){
 		<location id="id1" x="-518" y="-34">
 		</location>
 		<location id="id2" x="-297" y="-34">
+			<urgent/>
 		</location>
 		<location id="id3" x="-93" y="-34">
+			<urgent/>
 		</location>
 		<init ref="id1"/>
 		<transition id="id4">
@@ -310,12 +312,13 @@ void initGrid(){
 		<transition id="id21">
 			<source ref="id14"/>
 			<target ref="id9"/>
-			<label kind="assignment" x="-280" y="76">moveTimer=0</label>
+			<label kind="guard" x="-306" y="17">moveTimer==1</label>
+			<label kind="assignment" x="-306" y="0">moveTimer=0</label>
 		</transition>
 		<transition id="id22">
 			<source ref="id13"/>
 			<target ref="id14"/>
-			<label kind="guard" x="102" y="0">droneCounter==Ndrones</label>
+			<label kind="guard" x="102" y="0">droneCounter == Ndrones</label>
 		</transition>
 		<transition id="id23">
 			<source ref="id12"/>
@@ -339,8 +342,9 @@ void initGrid(){
 		<transition id="id27">
 			<source ref="id8"/>
 			<target ref="id9"/>
-			<label kind="assignment" x="-825" y="-8">initGrid(),
-globalTime=0</label>
+			<label kind="assignment" x="-824" y="-8">initGrid(),
+globalTime=0,
+moveTimer=0</label>
 		</transition>
 	</template>
 	<system>// Place template instantiations here.
