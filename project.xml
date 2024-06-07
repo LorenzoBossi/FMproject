@@ -90,6 +90,8 @@ typedef struct
 //channels
 chan detect[Ndrones];
 chan moveDrone[Ndrones];
+chan moveCivilian[Ncivilians];
+chan moveProfessional[Nprofessionals];
 
 //clocks
 clock globalTime;
@@ -146,57 +148,85 @@ bool isCloseToExit(Coordinates point){
 	<template>
 		<name>Professional</name>
 		<parameter>const id_pro_t id</parameter>
-		<location id="id0" x="0" y="0">
+		<location id="id0" x="-510" y="0">
+		</location>
+		<location id="id1" x="-187" y="0">
+			<urgent/>
 		</location>
 		<init ref="id0"/>
+		<transition id="id2">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<nail x="-348" y="-127"/>
+		</transition>
+		<transition id="id3">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="synchronisation" x="-425" y="-25">moveProfessional[id]?</label>
+		</transition>
 	</template>
 	<template>
 		<name>Drone</name>
 		<parameter>const id_dro_t id</parameter>
-		<location id="id1" x="-518" y="-34">
+		<location id="id4" x="-518" y="-34">
 		</location>
-		<location id="id2" x="-297" y="-34">
+		<location id="id5" x="-297" y="-34">
 			<urgent/>
 		</location>
-		<location id="id3" x="-93" y="-34">
+		<location id="id6" x="-93" y="-34">
 			<urgent/>
 		</location>
-		<init ref="id1"/>
-		<transition id="id4">
-			<source ref="id3"/>
-			<target ref="id1"/>
+		<init ref="id4"/>
+		<transition id="id7">
+			<source ref="id6"/>
+			<target ref="id4"/>
 			<nail x="-297" y="-212"/>
 		</transition>
-		<transition id="id5">
-			<source ref="id2"/>
-			<target ref="id3"/>
+		<transition id="id8">
+			<source ref="id5"/>
+			<target ref="id6"/>
 			<label kind="synchronisation" x="-255" y="-51">moveDrone[id]?</label>
 		</transition>
-		<transition id="id6">
-			<source ref="id1"/>
-			<target ref="id2"/>
+		<transition id="id9">
+			<source ref="id4"/>
+			<target ref="id5"/>
 			<label kind="synchronisation" x="-450" y="-51">detect[id]?</label>
 		</transition>
 	</template>
 	<template>
 		<name>Civilian</name>
 		<parameter>const id_civ_t id</parameter>
-		<location id="id7" x="-110" y="-17">
+		<location id="id10" x="-476" y="0">
 		</location>
-		<init ref="id7"/>
+		<location id="id11" x="-195" y="0">
+			<urgent/>
+		</location>
+		<init ref="id10"/>
+		<transition id="id12">
+			<source ref="id11"/>
+			<target ref="id10"/>
+			<nail x="-348" y="-136"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="synchronisation" x="-391" y="-25">moveCivilian[id]?</label>
+		</transition>
 	</template>
 	<template>
 		<name x="5" y="5">Clock</name>
 		<declaration>// Place local declarations here.
 clock moveTimer;
 
-id_civ_t civiliansAlive[Ncivilians-1];
-id_pro_t professionalsAlive[Ncivilians-1];
+id_civ_t civilians[Ncivilians-1];
+id_pro_t professionals[Ncivilians-1];
+int[0,Ncivilians] civiliansEscaping;
 
+//CAN PROFESSIONALS DIE???
 int[0,Nprofessionals+Ncivilians] casualties;
 int[0,Nprofessionals+Ncivilians] survivors;
 
-int[0,Ndrones] droneCounter;
+int counter;
 
 void initGrid(){
     
@@ -249,100 +279,138 @@ void initGrid(){
 }
 
 </declaration>
-		<location id="id8" x="-875" y="-8">
-			<name x="-885" y="-42">start</name>
+		<location id="id14" x="-1020" y="-8">
+			<name x="-1030" y="-42">start</name>
 		</location>
-		<location id="id9" x="-535" y="-8">
-			<name x="-595" y="17">countCasualties</name>
+		<location id="id15" x="-705" y="-8">
+			<name x="-765" y="17">countCasualties</name>
 			<urgent/>
 		</location>
-		<location id="id10" x="-510" y="-127">
-			<name x="-629" y="-136">droneDetect</name>
+		<location id="id16" x="-561" y="-127">
+			<name x="-680" y="-136">droneDetect</name>
 			<urgent/>
 		</location>
-		<location id="id11" x="-51" y="-136">
-			<name x="-94" y="-170">movePeople</name>
+		<location id="id17" x="-144" y="-136">
+			<name x="-195" y="-119">moveCivilians</name>
 			<urgent/>
 		</location>
-		<location id="id12" x="127" y="-136">
-			<name x="67" y="-170">moveProfessionals</name>
+		<location id="id18" x="187" y="-136">
+			<name x="127" y="-119">moveProfessionals</name>
 			<urgent/>
 		</location>
-		<location id="id13" x="323" y="-136">
-			<name x="348" y="-144">moveDrones</name>
+		<location id="id19" x="561" y="-136">
+			<name x="586" y="-144">moveDrones</name>
 			<urgent/>
 		</location>
-		<location id="id14" x="-68" y="85">
-			<name x="-102" y="42">waitTick</name>
-			<label kind="invariant" x="-110" y="102">moveTimer&lt;=1</label>
+		<location id="id20" x="-153" y="110">
+			<name x="-187" y="67">waitTick</name>
+			<label kind="invariant" x="-195" y="127">moveTimer&lt;=1</label>
 		</location>
-		<location id="id15" x="-518" y="-340">
+		<location id="id21" x="-561" y="-340">
 			<urgent/>
 		</location>
-		<location id="id16" x="314" y="-374">
+		<location id="id22" x="552" y="-374">
 			<urgent/>
 		</location>
-		<init ref="id8"/>
-		<transition id="id17">
-			<source ref="id16"/>
-			<target ref="id13"/>
-			<label kind="assignment" x="408" y="-280">droneCounter++</label>
-			<nail x="391" y="-255"/>
-		</transition>
-		<transition id="id18">
-			<source ref="id13"/>
-			<target ref="id16"/>
-			<label kind="guard" x="34" y="-289">droneCounter&lt;Ndrones</label>
-			<label kind="synchronisation" x="34" y="-272">moveDrone[droneCounter]!</label>
-			<nail x="229" y="-263"/>
-		</transition>
-		<transition id="id19">
-			<source ref="id15"/>
-			<target ref="id10"/>
-			<label kind="assignment" x="-459" y="-263">droneCounter++</label>
-			<nail x="-467" y="-246"/>
-		</transition>
-		<transition id="id20">
-			<source ref="id10"/>
-			<target ref="id15"/>
-			<label kind="guard" x="-748" y="-246">droneCounter&lt;Ndrones</label>
-			<label kind="synchronisation" x="-756" y="-263">detect[droneCounter]!</label>
-			<nail x="-578" y="-247"/>
-		</transition>
-		<transition id="id21">
-			<source ref="id14"/>
-			<target ref="id9"/>
-			<label kind="guard" x="-306" y="17">moveTimer==1</label>
-			<label kind="assignment" x="-306" y="0">moveTimer=0</label>
-		</transition>
-		<transition id="id22">
-			<source ref="id13"/>
-			<target ref="id14"/>
-			<label kind="guard" x="102" y="0">droneCounter == Ndrones</label>
-		</transition>
-		<transition id="id23">
-			<source ref="id12"/>
-			<target ref="id13"/>
-			<label kind="assignment" x="145" y="-136">droneCounter=0</label>
-		</transition>
-		<transition id="id24">
-			<source ref="id11"/>
-			<target ref="id12"/>
-		</transition>
+		<location id="id23" x="-153" y="-459">
+			<urgent/>
+		</location>
+		<location id="id24" x="187" y="-348">
+			<label kind="comments" x="85" y="-391">CAN PROFESSIONALS DIE/ESCAPE?</label>
+			<urgent/>
+		</location>
+		<init ref="id14"/>
 		<transition id="id25">
-			<source ref="id10"/>
-			<target ref="id11"/>
-			<label kind="guard" x="-365" y="-170">droneCounter == Ndrones</label>
+			<source ref="id24"/>
+			<target ref="id18"/>
+			<label kind="assignment" x="221" y="-289">counter++</label>
+			<nail x="212" y="-238"/>
 		</transition>
 		<transition id="id26">
-			<source ref="id9"/>
-			<target ref="id10"/>
-			<label kind="assignment" x="-522" y="-67">droneCounter=0</label>
+			<source ref="id18"/>
+			<target ref="id24"/>
+			<label kind="guard" x="-42" y="-280">counter &lt; Nprofessionals</label>
+			<label kind="synchronisation" x="-42" y="-297">moveProfessional[counter]!</label>
+			<nail x="161" y="-238"/>
 		</transition>
 		<transition id="id27">
-			<source ref="id8"/>
-			<target ref="id9"/>
-			<label kind="assignment" x="-824" y="-8">initGrid(),
+			<source ref="id23"/>
+			<target ref="id17"/>
+			<label kind="assignment" x="-110" y="-382">counter++</label>
+			<nail x="-110" y="-331"/>
+		</transition>
+		<transition id="id28">
+			<source ref="id17"/>
+			<target ref="id23"/>
+			<label kind="guard" x="-425" y="-365">counter &lt; civiliansEscaping</label>
+			<label kind="synchronisation" x="-467" y="-391">moveCivilian[civilians[counter]]!</label>
+			<nail x="-204" y="-323"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id22"/>
+			<target ref="id19"/>
+			<label kind="assignment" x="586" y="-323">counter++</label>
+			<nail x="595" y="-255"/>
+		</transition>
+		<transition id="id30">
+			<source ref="id19"/>
+			<target ref="id22"/>
+			<label kind="guard" x="374" y="-340">counter&lt;Ndrones</label>
+			<label kind="synchronisation" x="374" y="-323">moveDrone[counter]!</label>
+			<nail x="518" y="-263"/>
+		</transition>
+		<transition id="id31">
+			<source ref="id21"/>
+			<target ref="id16"/>
+			<label kind="assignment" x="-510" y="-263">counter++</label>
+			<nail x="-518" y="-246"/>
+		</transition>
+		<transition id="id32">
+			<source ref="id16"/>
+			<target ref="id21"/>
+			<label kind="guard" x="-748" y="-246">counter&lt;Ndrones</label>
+			<label kind="synchronisation" x="-756" y="-263">detect[counter]!</label>
+			<nail x="-603" y="-246"/>
+		</transition>
+		<transition id="id33">
+			<source ref="id20"/>
+			<target ref="id15"/>
+			<label kind="guard" x="-467" y="85">moveTimer==1</label>
+			<label kind="assignment" x="-467" y="68">moveTimer=0</label>
+		</transition>
+		<transition id="id34">
+			<source ref="id19"/>
+			<target ref="id20"/>
+			<label kind="guard" x="416" y="-51">counter == Ndrones</label>
+			<nail x="272" y="17"/>
+		</transition>
+		<transition id="id35">
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="guard" x="272" y="-161">counter==Nprofessionals</label>
+			<label kind="assignment" x="357" y="-136">counter=0</label>
+		</transition>
+		<transition id="id36">
+			<source ref="id17"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-76" y="-161">counter == civiliansEscaping</label>
+			<label kind="assignment" x="-17" y="-136">counter=0</label>
+		</transition>
+		<transition id="id37">
+			<source ref="id16"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-374" y="-161">counter == Ndrones</label>
+			<label kind="assignment" x="-331" y="-127">counter=0</label>
+		</transition>
+		<transition id="id38">
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="assignment" x="-612" y="-68">counter=0</label>
+		</transition>
+		<transition id="id39">
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="assignment" x="-969" y="-8">initGrid(),
 globalTime=0,
 moveTimer=0</label>
 		</transition>
