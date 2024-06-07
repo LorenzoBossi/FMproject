@@ -175,12 +175,20 @@ bool isValidPosition(int row,int column){
 Coordinates randomMove(Coordinates currentPos){
     bool validMove;
     int i=0;
+    int inc;
     int rand;
     int x,y;
     Coordinates move;
 
-    rand= fint(random(3));
+    rand=fint(random(2));
+    if (rand == 0)
+        inc = +1;
+    else
+        inc = -1;
 
+
+    rand= fint(random(4));
+    
     do{
         y=currentPos.row;
         x=currentPos.column;
@@ -202,7 +210,7 @@ Coordinates randomMove(Coordinates currentPos){
         validMove=isValidPosition(y,x);
 
         if(!validMove){
-            rand = (rand + 1) % 4;
+            rand = (rand + inc) % 4;
             i++;
         }    
 
