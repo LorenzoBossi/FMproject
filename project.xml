@@ -6,7 +6,7 @@
 
 
 
-//CONFIGURATIONS
+//----- CONFIGURATIONS -----
 
 //GRID
 const int Ncolumns = 10;
@@ -14,16 +14,15 @@ const int Nrows = 12;
 
 const int Ndrones = 2;
 const int Ncivilians = 3;
-const int Nprofessionals = 2;
+const int Nprofessionals = 1;
  
 const int Nexits = 1;
-const int Nfires = 3;
+const int Nfires = 5;
 
 
 typedef int[0,Ncivilians-1] id_civ_t;
 typedef int[0,Nprofessionals-1] id_pro_t;
 typedef int[0,Ndrones-1] id_dro_t;
-
 typedef int[0,Nrows-1] row_t;
 typedef int[0,Ncolumns-1] col_t;
 
@@ -36,12 +35,11 @@ typedef struct{
 const Coordinates initCivilians[Ncivilians] = {
 {0,0},
 {5,7},
-{0,1}
+{8,8}
 };
 
 const Coordinates initProfessionals[Nprofessionals] = {
-{3,4},
-{9,7}
+{3,4}
 };
 
 const Coordinates initDrones[Ndrones] = {
@@ -49,12 +47,16 @@ const Coordinates initDrones[Ndrones] = {
 {5,0}
 };
 
+//Fire cells must be contiguous
 const Coordinates initFires[Nfires] = {
 {7,5},
 {7,6},
-{7,7}
+{7,7},
+{7,8},
+{7,4}
 };
 
+//Exits must be on the boundary of the grid
 const Coordinates initExits[Nexits] = {
 {9,9}
 };
@@ -74,9 +76,7 @@ const int civAssistanceTime = 4; //Tzr
 
 
 
-
-
-//Definitions
+// ----- DECLARATIONS -----
 
 typedef struct
 {
@@ -88,24 +88,29 @@ typedef struct
 } Cell;
 
 //channels
+broadcast chan start;
 chan detect[Ndrones];
 chan moveDrone[Ndrones];
 chan moveCivilian[Ncivilians];
 chan moveProfessional[Nprofessionals];
+chan saveCivilian[Ncivilians];
 
 //clocks
 clock globalTime;
 
 
 Cell grid[Nrows][Ncolumns];
-
-
+bool isInDanger[Ncivilians];
+//CAN PROFESSIONALS DIE??
+int[0,Nprofessionals+Ncivilians] casualties;
+int[0,Nprofessionals+Ncivilians] survivors;
 
 
 int distance(Coordinates p1, Coordinates p2){
     return abs(p1.row-p2.row)+abs(p1.column-p2.column);
 }
 
+//even in diagonal?
 bool isCloseToFire(Coordinates point){
     int x,y;
     if(grid[point.row][point.column].onFire)
@@ -124,6 +129,7 @@ bool isCloseToFire(Coordinates point){
     return false;
 }
 
+//even in diagonal?
 bool isCloseToExit(Coordinates point){
     int x,y;
     if(grid[point.row][point.column].isExit)
@@ -143,6 +149,79 @@ bool isCloseToExit(Coordinates point){
 }
 
 
+//MOVING STRATEGIES
+
+bool isValidPosition(int row,int column){
+    Cell cell;
+
+    if(row &lt; 0 || column &lt; 0)
+        return false;
+    if(row &gt; Nrows-1 || column &gt; Ncolumns-1)
+        return false;
+
+    cell = grid[row][column];
+
+    if(cell.civilian&gt;=0 || cell.professional&gt;=0)
+        return false;
+
+    //should never happen
+    if(cell.onFire)
+        return false;
+
+    return true;
+        
+}
+
+Coordinates randomMove(Coordinates currentPos){
+    bool validMove;
+    int i=0;
+    int rand;
+    int x,y;
+    Coordinates move;
+
+    rand= fint(random(3));
+
+    do{
+        y=currentPos.row;
+        x=currentPos.column;
+
+        //switch case not supperted
+        if(rand == 0)
+            //up
+            y--;
+        else if(rand == 1)
+            //right
+            x++;
+        else if(rand == 2)
+            //down
+            y++;
+        else if(rand == 3)
+            //left
+            x--;
+        
+        validMove=isValidPosition(y,x);
+
+        if(!validMove){
+            rand = (rand + 1) % 4;
+            i++;
+        }    
+
+
+    }while(!validMove &amp;&amp; i&lt;4);
+    
+    if(validMove){
+        move.row=y;
+        move.column=x;
+    }
+    else
+        //if no available moves
+        move=currentPos;
+     
+    return move;
+    
+}
+
+
 
 </declaration>
 	<template>
@@ -153,13 +232,21 @@ bool isCloseToExit(Coordinates point){
 		<location id="id1" x="-187" y="0">
 			<urgent/>
 		</location>
-		<init ref="id0"/>
-		<transition id="id2">
+		<location id="id2" x="-748" y="0">
+			<urgent/>
+		</location>
+		<init ref="id2"/>
+		<transition id="id3">
+			<source ref="id2"/>
+			<target ref="id0"/>
+			<label kind="synchronisation" x="-680" y="-17">start?</label>
+		</transition>
+		<transition id="id4">
 			<source ref="id1"/>
 			<target ref="id0"/>
 			<nail x="-348" y="-127"/>
 		</transition>
-		<transition id="id3">
+		<transition id="id5">
 			<source ref="id0"/>
 			<target ref="id1"/>
 			<label kind="synchronisation" x="-425" y="-25">moveProfessional[id]?</label>
@@ -168,49 +255,147 @@ bool isCloseToExit(Coordinates point){
 	<template>
 		<name>Drone</name>
 		<parameter>const id_dro_t id</parameter>
-		<location id="id4" x="-518" y="-34">
+		<location id="id6" x="-518" y="-34">
 		</location>
-		<location id="id5" x="-297" y="-34">
+		<location id="id7" x="-297" y="-34">
 			<urgent/>
 		</location>
-		<location id="id6" x="-93" y="-34">
+		<location id="id8" x="-93" y="-34">
 			<urgent/>
 		</location>
-		<init ref="id4"/>
-		<transition id="id7">
-			<source ref="id6"/>
-			<target ref="id4"/>
+		<location id="id9" x="-748" y="-34">
+			<urgent/>
+		</location>
+		<init ref="id6"/>
+		<transition id="id10">
+			<source ref="id9"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-663" y="-51">start?</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id8"/>
+			<target ref="id6"/>
 			<nail x="-297" y="-212"/>
 		</transition>
-		<transition id="id8">
-			<source ref="id5"/>
-			<target ref="id6"/>
+		<transition id="id12">
+			<source ref="id7"/>
+			<target ref="id8"/>
 			<label kind="synchronisation" x="-255" y="-51">moveDrone[id]?</label>
 		</transition>
-		<transition id="id9">
-			<source ref="id4"/>
-			<target ref="id5"/>
+		<transition id="id13">
+			<source ref="id6"/>
+			<target ref="id7"/>
 			<label kind="synchronisation" x="-450" y="-51">detect[id]?</label>
 		</transition>
 	</template>
 	<template>
 		<name>Civilian</name>
 		<parameter>const id_civ_t id</parameter>
-		<location id="id10" x="-476" y="0">
+		<declaration>Coordinates currentPos;
+double finishTime = -1;
+
+clock burningTimer;
+
+void move(){
+    Coordinates pos = randomMove(currentPos);
+    grid[currentPos.row][currentPos.column].civilian=-1;
+    grid[pos.row][pos.column].civilian=id;
+    currentPos=pos;
+}
+
+void die(){
+    isInDanger[id]=false;
+    casualties++;
+    grid[currentPos.row][currentPos.column].civilian=-1;
+    finishTime=globalTime;
+}
+
+void escape(){
+    isInDanger[id]=false;
+    survivors++;
+    grid[currentPos.row][currentPos.column].civilian=-1;
+    finishTime=globalTime;
+}
+</declaration>
+		<location id="id14" x="-943" y="-238">
 		</location>
-		<location id="id11" x="-195" y="0">
+		<location id="id15" x="-492" y="-238">
+			<label kind="comments" x="-314" y="-221">close even in diagonal??</label>
 			<urgent/>
 		</location>
-		<init ref="id10"/>
-		<transition id="id12">
-			<source ref="id11"/>
-			<target ref="id10"/>
-			<nail x="-348" y="-136"/>
+		<location id="id16" x="110" y="-238">
+			<urgent/>
+		</location>
+		<location id="id17" x="-170" y="-510">
+			<name x="-204" y="-484">burning</name>
+			<label kind="invariant" x="-221" y="-459">burningTimer
+     &lt;=
+burningTime</label>
+		</location>
+		<location id="id18" x="306" y="-510">
+			<name x="296" y="-544">dead</name>
+		</location>
+		<location id="id19" x="391" y="-238">
+			<name x="381" y="-272">safe</name>
+		</location>
+		<location id="id20" x="-493" y="-25">
+			<urgent/>
+		</location>
+		<init ref="id20"/>
+		<transition id="id21">
+			<source ref="id20"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-484" y="-119">start?</label>
+			<label kind="assignment" x="-484" y="-102">currentPos=initCivilians[id]</label>
 		</transition>
-		<transition id="id13">
-			<source ref="id10"/>
-			<target ref="id11"/>
-			<label kind="synchronisation" x="-391" y="-25">moveCivilian[id]?</label>
+		<transition id="id22">
+			<source ref="id16"/>
+			<target ref="id19"/>
+			<label kind="assignment" x="221" y="-238">escape()</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id17"/>
+			<target ref="id18"/>
+			<label kind="guard" x="8" y="-535">burningTimer&gt;=burningTime</label>
+			<label kind="assignment" x="76" y="-510">die()</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id17"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-8" y="-382">burningTimer&lt;=burningTime</label>
+			<label kind="synchronisation" x="-8" y="-407">saveCivilian[id]?</label>
+		</transition>
+		<transition id="id25">
+			<source ref="id17"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="-237" y="-637">moveCivilian[id]?</label>
+			<nail x="-229" y="-603"/>
+			<nail x="-118" y="-603"/>
+		</transition>
+		<transition id="id26">
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="guard" x="-569" y="-408">!isCloseToExit(currentPos) &amp;&amp;
+isCloseToFire(currentPos)</label>
+			<label kind="assignment" x="-568" y="-426">burningTimer=0</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-314" y="-263">isCloseToExit(currentPos)</label>
+		</transition>
+		<transition id="id28">
+			<source ref="id15"/>
+			<target ref="id14"/>
+			<label kind="guard" x="-875" y="-144">!isCloseToExit(currentPos) &amp;&amp;
+!isCloseToFire(currentPos)</label>
+			<nail x="-773" y="-161"/>
+		</transition>
+		<transition id="id29">
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-815" y="-263">moveCivilian[id]?</label>
+			<label kind="assignment" x="-772" y="-238">move()</label>
 		</transition>
 	</template>
 	<template>
@@ -218,18 +403,15 @@ bool isCloseToExit(Coordinates point){
 		<declaration>// Place local declarations here.
 clock moveTimer;
 
-id_civ_t civilians[Ncivilians-1];
-id_pro_t professionals[Ncivilians-1];
-int[0,Ncivilians] civiliansEscaping;
 
-//CAN PROFESSIONALS DIE???
-int[0,Nprofessionals+Ncivilians] casualties;
-int[0,Nprofessionals+Ncivilians] survivors;
 
 int counter;
 
 void initGrid(){
     
+    for ( i : id_civ_t)
+        isInDanger[i]=true;
+
     //empty grid
     for (i : row_t){
         for(j : col_t){
@@ -265,8 +447,8 @@ void initGrid(){
     //init professionals
     for (i : id_pro_t)
         {
-            Coordinates professional := initProfessionals[i];
-            grid[professional.row][professional.column].professional := i;
+            Coordinates professional = initProfessionals[i];
+            grid[professional.row][professional.column].professional = i;
         }
 
     //init drones
@@ -279,138 +461,162 @@ void initGrid(){
 }
 
 </declaration>
-		<location id="id14" x="-1020" y="-8">
-			<name x="-1030" y="-42">start</name>
+		<location id="id30" x="-1020" y="-8">
+			<urgent/>
 		</location>
-		<location id="id15" x="-705" y="-8">
+		<location id="id31" x="-705" y="-8">
 			<name x="-765" y="17">countCasualties</name>
 			<urgent/>
 		</location>
-		<location id="id16" x="-561" y="-127">
+		<location id="id32" x="-561" y="-127">
 			<name x="-680" y="-136">droneDetect</name>
 			<urgent/>
 		</location>
-		<location id="id17" x="-144" y="-136">
-			<name x="-195" y="-119">moveCivilians</name>
+		<location id="id33" x="-153" y="-136">
+			<name x="-204" y="-119">moveCivilians</name>
 			<urgent/>
 		</location>
-		<location id="id18" x="187" y="-136">
+		<location id="id34" x="187" y="-136">
 			<name x="127" y="-119">moveProfessionals</name>
 			<urgent/>
 		</location>
-		<location id="id19" x="561" y="-136">
+		<location id="id35" x="561" y="-136">
 			<name x="586" y="-144">moveDrones</name>
 			<urgent/>
 		</location>
-		<location id="id20" x="-153" y="110">
+		<location id="id36" x="-153" y="110">
 			<name x="-187" y="67">waitTick</name>
 			<label kind="invariant" x="-195" y="127">moveTimer&lt;=1</label>
 		</location>
-		<location id="id21" x="-561" y="-340">
+		<location id="id37" x="-561" y="-340">
 			<urgent/>
 		</location>
-		<location id="id22" x="552" y="-374">
+		<location id="id38" x="552" y="-374">
 			<urgent/>
 		</location>
-		<location id="id23" x="-153" y="-459">
+		<location id="id39" x="-153" y="-340">
 			<urgent/>
 		</location>
-		<location id="id24" x="187" y="-348">
+		<location id="id40" x="187" y="-348">
 			<label kind="comments" x="85" y="-391">CAN PROFESSIONALS DIE/ESCAPE?</label>
 			<urgent/>
 		</location>
-		<init ref="id14"/>
-		<transition id="id25">
-			<source ref="id24"/>
-			<target ref="id18"/>
+		<location id="id41" x="-153" y="-527">
+			<urgent/>
+		</location>
+		<location id="id42" x="-858" y="-8">
+			<urgent/>
+		</location>
+		<init ref="id30"/>
+		<transition id="id43">
+			<source ref="id42"/>
+			<target ref="id31"/>
+			<label kind="synchronisation" x="-816" y="-34">start!</label>
+		</transition>
+		<transition id="id44">
+			<source ref="id39"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-263" y="-459">!isInDanger[counter]</label>
+		</transition>
+		<transition id="id45">
+			<source ref="id39"/>
+			<target ref="id41"/>
+			<label kind="guard" x="-484" y="-476">isInDanger[counter]</label>
+			<label kind="synchronisation" x="-484" y="-459">moveCivilian[counter]!</label>
+			<nail x="-289" y="-382"/>
+			<nail x="-289" y="-501"/>
+		</transition>
+		<transition id="id46">
+			<source ref="id41"/>
+			<target ref="id33"/>
+			<label kind="assignment" x="-111" y="-246">counter++</label>
+			<nail x="-68" y="-459"/>
+			<nail x="-68" y="-263"/>
+		</transition>
+		<transition id="id47">
+			<source ref="id40"/>
+			<target ref="id34"/>
 			<label kind="assignment" x="221" y="-289">counter++</label>
 			<nail x="212" y="-238"/>
 		</transition>
-		<transition id="id26">
-			<source ref="id18"/>
-			<target ref="id24"/>
+		<transition id="id48">
+			<source ref="id34"/>
+			<target ref="id40"/>
 			<label kind="guard" x="-42" y="-280">counter &lt; Nprofessionals</label>
 			<label kind="synchronisation" x="-42" y="-297">moveProfessional[counter]!</label>
 			<nail x="161" y="-238"/>
 		</transition>
-		<transition id="id27">
-			<source ref="id23"/>
-			<target ref="id17"/>
-			<label kind="assignment" x="-110" y="-382">counter++</label>
-			<nail x="-110" y="-331"/>
+		<transition id="id49">
+			<source ref="id33"/>
+			<target ref="id39"/>
+			<label kind="guard" x="-331" y="-272">counter &lt; Ncivilians</label>
+			<nail x="-153" y="-280"/>
 		</transition>
-		<transition id="id28">
-			<source ref="id17"/>
-			<target ref="id23"/>
-			<label kind="guard" x="-425" y="-365">counter &lt; civiliansEscaping</label>
-			<label kind="synchronisation" x="-467" y="-391">moveCivilian[civilians[counter]]!</label>
-			<nail x="-204" y="-323"/>
-		</transition>
-		<transition id="id29">
-			<source ref="id22"/>
-			<target ref="id19"/>
+		<transition id="id50">
+			<source ref="id38"/>
+			<target ref="id35"/>
 			<label kind="assignment" x="586" y="-323">counter++</label>
 			<nail x="595" y="-255"/>
 		</transition>
-		<transition id="id30">
-			<source ref="id19"/>
-			<target ref="id22"/>
+		<transition id="id51">
+			<source ref="id35"/>
+			<target ref="id38"/>
 			<label kind="guard" x="374" y="-340">counter&lt;Ndrones</label>
 			<label kind="synchronisation" x="374" y="-323">moveDrone[counter]!</label>
 			<nail x="518" y="-263"/>
 		</transition>
-		<transition id="id31">
-			<source ref="id21"/>
-			<target ref="id16"/>
+		<transition id="id52">
+			<source ref="id37"/>
+			<target ref="id32"/>
 			<label kind="assignment" x="-510" y="-263">counter++</label>
 			<nail x="-518" y="-246"/>
 		</transition>
-		<transition id="id32">
-			<source ref="id16"/>
-			<target ref="id21"/>
+		<transition id="id53">
+			<source ref="id32"/>
+			<target ref="id37"/>
 			<label kind="guard" x="-748" y="-246">counter&lt;Ndrones</label>
 			<label kind="synchronisation" x="-756" y="-263">detect[counter]!</label>
 			<nail x="-603" y="-246"/>
 		</transition>
-		<transition id="id33">
-			<source ref="id20"/>
-			<target ref="id15"/>
+		<transition id="id54">
+			<source ref="id36"/>
+			<target ref="id31"/>
 			<label kind="guard" x="-467" y="85">moveTimer==1</label>
 			<label kind="assignment" x="-467" y="68">moveTimer=0</label>
 		</transition>
-		<transition id="id34">
-			<source ref="id19"/>
-			<target ref="id20"/>
+		<transition id="id55">
+			<source ref="id35"/>
+			<target ref="id36"/>
 			<label kind="guard" x="416" y="-51">counter == Ndrones</label>
 			<nail x="272" y="17"/>
 		</transition>
-		<transition id="id35">
-			<source ref="id18"/>
-			<target ref="id19"/>
+		<transition id="id56">
+			<source ref="id34"/>
+			<target ref="id35"/>
 			<label kind="guard" x="272" y="-161">counter==Nprofessionals</label>
 			<label kind="assignment" x="357" y="-136">counter=0</label>
 		</transition>
-		<transition id="id36">
-			<source ref="id17"/>
-			<target ref="id18"/>
-			<label kind="guard" x="-76" y="-161">counter == civiliansEscaping</label>
+		<transition id="id57">
+			<source ref="id33"/>
+			<target ref="id34"/>
+			<label kind="guard" x="-76" y="-161">counter == Ncivilians</label>
 			<label kind="assignment" x="-17" y="-136">counter=0</label>
 		</transition>
-		<transition id="id37">
-			<source ref="id16"/>
-			<target ref="id17"/>
+		<transition id="id58">
+			<source ref="id32"/>
+			<target ref="id33"/>
 			<label kind="guard" x="-374" y="-161">counter == Ndrones</label>
 			<label kind="assignment" x="-331" y="-127">counter=0</label>
 		</transition>
-		<transition id="id38">
-			<source ref="id15"/>
-			<target ref="id16"/>
+		<transition id="id59">
+			<source ref="id31"/>
+			<target ref="id32"/>
 			<label kind="assignment" x="-612" y="-68">counter=0</label>
 		</transition>
-		<transition id="id39">
-			<source ref="id14"/>
-			<target ref="id15"/>
-			<label kind="assignment" x="-969" y="-8">initGrid(),
+		<transition id="id60">
+			<source ref="id30"/>
+			<target ref="id42"/>
+			<label kind="assignment" x="-977" y="0">initGrid(),
 globalTime=0,
 moveTimer=0</label>
 		</transition>
