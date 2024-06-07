@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+
+
+
+
+//CONFIGURATIONS
+
+//GRID
+const int Ncolumns = 10;
+const int Nrows = 12;
+
+const int Ndrones = 2;
+const int Ncivilians = 3;
+const int Nprofessionals = 2;
+ 
+const int Nexits = 1;
+const int Nfires = 3;
+
+
+typedef int[0,Ncivilians-1] id_civ_t;
+typedef int[0,Nprofessionals-1] id_pro_t;
+typedef int[0,Ndrones-1] id_dro_t;
+
+typedef int[0,Nrows-1] row_t;
+typedef int[0,Ncolumns-1] col_t;
+
+typedef struct{
+    row_t row;
+    col_t column; 
+} Coordinates;
+
+
+const Coordinates initCivilians[Ncivilians] = {
+{0,0},
+{5,7},
+{0,1}
+};
+
+const Coordinates initProfessionals[Nprofessionals] = {
+{3,4},
+{9,7}
+};
+
+const Coordinates initDrones[Ndrones] = {
+{0,5},
+{5,0}
+};
+
+const Coordinates initFires[Nfires] = {
+{7,5},
+{7,6},
+{7,7}
+};
+
+const Coordinates initExits[Nexits] = {
+{9,9}
+};
+
+
+//Assistance
+
+const int droneRadius = 2; //Nv 
+const int burningTime = 10; //Tv
+const int proAssistanceTime = 3; //Tfr 
+const int civAssistanceTime = 4; //Tzr
+
+
+
+
+
+
+
+
+
+
+//Definitions
+
+typedef struct
+{
+    int[-1,Ncivilians - 1] civilian;
+    int[-1,Nprofessionals - 1] professional;
+    int[-1,Ndrones - 1] drone;
+    bool onFire;
+    bool isExit;
+} Cell;
+
+//channels
+chan detect[Ndrones];
+chan moveDrone[Ndrones];
+
+//clocks
+clock globalTime;
+
+
+Cell grid[Nrows][Ncolumns];
+
+
+
+
+int distance(Coordinates p1, Coordinates p2){
+    return abs(p1.row-p2.row)+abs(p1.column-p2.column);
+}
+
+bool isCloseToFire(Coordinates point){
+    int x,y;
+    if(grid[point.row][point.column].onFire)
+        return true;
+    for(i : int[-1,1]){
+        for(j: int[-1,1]){
+            x= point.row+i;
+            y= point.column+j;
+            if(x&gt;=0 &amp;&amp; x&lt; Nrows  &amp;&amp;  y&gt;=0 &amp;&amp; y&lt;Ncolumns){
+                if(grid[x][y].onFire)
+                    return true;
+            }
+
+        }
+    }
+    return false;
+}
+
+bool isCloseToExit(Coordinates point){
+    int x,y;
+    if(grid[point.row][point.column].isExit)
+        return true;
+    for(i : int[-1,1]){
+        for(j: int[-1,1]){
+            x= point.row+i;
+            y= point.column+j;
+            if(x&gt;=0 &amp;&amp; x&lt; Nrows  &amp;&amp;  y&gt;=0 &amp;&amp; y&lt;Ncolumns){
+                if(grid[x][y].isExit)
+                    return true;
+            }
+
+        }
+    }
+    return false;
+}
+
+
+
+</declaration>
+	<template>
+		<name>Professional</name>
+		<parameter>const id_pro_t id</parameter>
+		<location id="id0" x="0" y="0">
+		</location>
+		<init ref="id0"/>
+	</template>
+	<template>
+		<name>Drone</name>
+		<parameter>const id_dro_t id</parameter>
+		<location id="id1" x="-518" y="-34">
+		</location>
+		<location id="id2" x="-297" y="-34">
+		</location>
+		<location id="id3" x="-93" y="-34">
+		</location>
+		<init ref="id1"/>
+		<transition id="id4">
+			<source ref="id3"/>
+			<target ref="id1"/>
+			<nail x="-297" y="-212"/>
+		</transition>
+		<transition id="id5">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="synchronisation" x="-255" y="-51">moveDrone[id]?</label>
+		</transition>
+		<transition id="id6">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-450" y="-51">detect[id]?</label>
+		</transition>
+	</template>
+	<template>
+		<name>Civilian</name>
+		<parameter>const id_civ_t id</parameter>
+		<location id="id7" x="-110" y="-17">
+		</location>
+		<init ref="id7"/>
+	</template>
+	<template>
+		<name x="5" y="5">Clock</name>
+		<declaration>// Place local declarations here.
+clock moveTimer;
+
+id_civ_t civiliansAlive[Ncivilians-1];
+id_pro_t professionalsAlive[Ncivilians-1];
+
+int[0,Nprofessionals+Ncivilians] casualties;
+int[0,Nprofessionals+Ncivilians] survivors;
+
+int[0,Ndrones] droneCounter;
+
+void initGrid(){
+    
+    //empty grid
+    for (i : row_t){
+        for(j : col_t){
+        grid[i][j].civilian=-1;
+        grid[i][j].professional=-1;
+        grid[i][j].drone=-1;
+        grid[i][j].onFire=false;
+        grid[i][j].isExit=false;
+        }
+    }
+
+    //init fires
+    for (i : int[0,Nfires-1])
+        {
+            Coordinates fire = initFires[i];
+            grid[fire.row][fire.column].onFire = true;
+        }
+
+    //init exits
+    for (i : int[0,Nexits-1])
+        {
+            Coordinates safeExit = initExits[i];
+            grid[safeExit.row][safeExit.column].isExit = true;
+        }
+
+    //init civilians
+    for (i : id_civ_t)
+        {
+            Coordinates civilian = initCivilians[i];
+            grid[civilian.row][civilian.column].civilian = i;
+        }
+
+    //init professionals
+    for (i : id_pro_t)
+        {
+            Coordinates professional := initProfessionals[i];
+            grid[professional.row][professional.column].professional := i;
+        }
+
+    //init drones
+    for (i : id_dro_t)
+        {
+            Coordinates drone = initDrones[i];
+            grid[drone.row][drone.column].drone = i;
+        }
+
+}
+
+</declaration>
+		<location id="id8" x="-875" y="-8">
+			<name x="-885" y="-42">start</name>
+		</location>
+		<location id="id9" x="-535" y="-8">
+			<name x="-595" y="17">countCasualties</name>
+			<urgent/>
+		</location>
+		<location id="id10" x="-510" y="-127">
+			<name x="-629" y="-136">droneDetect</name>
+			<urgent/>
+		</location>
+		<location id="id11" x="-51" y="-136">
+			<name x="-94" y="-170">movePeople</name>
+			<urgent/>
+		</location>
+		<location id="id12" x="127" y="-136">
+			<name x="67" y="-170">moveProfessionals</name>
+			<urgent/>
+		</location>
+		<location id="id13" x="323" y="-136">
+			<name x="348" y="-144">moveDrones</name>
+			<urgent/>
+		</location>
+		<location id="id14" x="-68" y="85">
+			<name x="-102" y="42">waitTick</name>
+			<label kind="invariant" x="-110" y="102">moveTimer&lt;=1</label>
+		</location>
+		<location id="id15" x="-518" y="-340">
+			<urgent/>
+		</location>
+		<location id="id16" x="314" y="-374">
+			<urgent/>
+		</location>
+		<init ref="id8"/>
+		<transition id="id17">
+			<source ref="id16"/>
+			<target ref="id13"/>
+			<label kind="assignment" x="408" y="-280">droneCounter++</label>
+			<nail x="391" y="-255"/>
+		</transition>
+		<transition id="id18">
+			<source ref="id13"/>
+			<target ref="id16"/>
+			<label kind="guard" x="34" y="-289">droneCounter&lt;Ndrones</label>
+			<label kind="synchronisation" x="34" y="-272">moveDrone[droneCounter]!</label>
+			<nail x="229" y="-263"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id15"/>
+			<target ref="id10"/>
+			<label kind="assignment" x="-459" y="-263">droneCounter++</label>
+			<nail x="-467" y="-246"/>
+		</transition>
+		<transition id="id20">
+			<source ref="id10"/>
+			<target ref="id15"/>
+			<label kind="guard" x="-748" y="-246">droneCounter&lt;Ndrones</label>
+			<label kind="synchronisation" x="-756" y="-263">detect[droneCounter]!</label>
+			<nail x="-578" y="-247"/>
+		</transition>
+		<transition id="id21">
+			<source ref="id14"/>
+			<target ref="id9"/>
+			<label kind="assignment" x="-280" y="76">moveTimer=0</label>
+		</transition>
+		<transition id="id22">
+			<source ref="id13"/>
+			<target ref="id14"/>
+			<label kind="guard" x="102" y="0">droneCounter==Ndrones</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id12"/>
+			<target ref="id13"/>
+			<label kind="assignment" x="145" y="-136">droneCounter=0</label>
+		</transition>
+		<transition id="id24">
+			<source ref="id11"/>
+			<target ref="id12"/>
+		</transition>
+		<transition id="id25">
+			<source ref="id10"/>
+			<target ref="id11"/>
+			<label kind="guard" x="-365" y="-170">droneCounter == Ndrones</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id9"/>
+			<target ref="id10"/>
+			<label kind="assignment" x="-522" y="-67">droneCounter=0</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id8"/>
+			<target ref="id9"/>
+			<label kind="assignment" x="-825" y="-8">initGrid(),
+globalTime=0</label>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+
+
+// List one or more processes to be composed into a system.
+system Clock,Drone,Civilian,Professional;
+
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
