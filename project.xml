@@ -9,8 +9,9 @@
 //----- CONFIGURATIONS -----
 
 //GRID
-const int Ncolumns = 10;
 const int Nrows = 12;
+const int Ncolumns = 10;
+
 
 const int Ndrones = 2;
 const int Ncivilians = 3;
@@ -35,7 +36,7 @@ typedef struct{
 const Coordinates initCivilians[Ncivilians] = {
 {0,0},
 {5,7},
-{8,8}
+{11,9}
 };
 
 const Coordinates initProfessionals[Nprofessionals] = {
@@ -100,14 +101,46 @@ clock globalTime;
 
 
 Cell grid[Nrows][Ncolumns];
-bool isInDanger[Ncivilians];
+bool isOnTheGrid[Ncivilians];
+
+Coordinates needsHelp[Ncivilians];
+int[0,Ncivilians] civInDanger=0;
+
 //CAN PROFESSIONALS DIE??
 int[0,Nprofessionals+Ncivilians] casualties;
 int[0,Nprofessionals+Ncivilians] survivors;
 
-
+//Coordinates helpers
 int distance(Coordinates p1, Coordinates p2){
     return abs(p1.row-p2.row)+abs(p1.column-p2.column);
+}
+
+bool isSamePlace(Coordinates c1, Coordinates c2){
+    return c1.row == c2.row &amp;&amp; c1.column == c2.column;
+}
+
+//return the index of the help request
+int neededHelpAt(Coordinates pos){
+    needsHelp[civInDanger].row=pos.row;
+    needsHelp[civInDanger].column=pos.column;
+    civInDanger++;
+    return civInDanger-1;
+}
+void removeHelpRequestN(int index){
+    int i;
+    for(i=index;i&lt;civInDanger-1;i++){
+        needsHelp[i]=needsHelp[i+1];
+    }
+    civInDanger--;
+}
+void noHelpNeededAt(Coordinates pos){
+    int i;
+    for(i=0;i&lt;civInDanger;i++){
+        if(isSamePlace(pos,needsHelp[i])){
+            removeHelpRequestN(i);
+            return;
+        }
+    }
 }
 
 //even in diagonal?
@@ -147,6 +180,8 @@ bool isCloseToExit(Coordinates point){
     }
     return false;
 }
+
+
 
 
 //MOVING STRATEGIES
@@ -229,18 +264,112 @@ Coordinates randomMove(Coordinates currentPos){
     
 }
 
+Coordinates moveToExit(Coordinates currentPos,Coordinates exitPos){
+     Coordinates move;
+     int row = currentPos.row;
+     int column = currentPos.column;
+
+     if(abs(currentPos.row-exitPos.row) &gt; abs(currentPos.column-exitPos.column)) {
+        //precedence to row movement
+        if(currentPos.row-exitPos.row &gt; 0){
+            row--; 
+        }else{
+            row++;
+        }
+        if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+        }else{
+            row=currentPos.row;
+            if(currentPos.column-exitPos.column &gt; 0){
+                column --;
+            }else{
+                column ++;
+            }
+            if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+            }else{
+                return randomMove(currentPos);
+            }
+        }
+
+    }else{
+        //precedence to column movement
+        if(currentPos.column-exitPos.column &gt; 0){
+            column--; 
+        }else{
+            column++;
+        }
+        if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+        }else{
+            column=currentPos.column;
+            if(currentPos.row-exitPos.row &gt; 0){
+                row --;
+            }else{
+                row ++;
+            }
+            if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+            }else{
+                return randomMove(currentPos);
+            }
+
+
+        }
+
+    }
+}
+
+Coordinates getClosestExit(Coordinates pos){
+    Coordinates min;
+    int minDistance;
+    int temp;
+    int i;
+    min= initExits[0];//suppose at least an exit
+    minDistance = distance(pos,min);
+    
+    for( i=1; i&lt;Nexits-1; i++){
+        temp=distance(pos,initExits[i]);
+        if(temp&lt;minDistance){
+            minDistance=temp;
+            min=initExits[i];
+        }      
+    }
+    
+    return min;
+
+}
+
 
 
 </declaration>
 	<template>
 		<name>Professional</name>
 		<parameter>const id_pro_t id</parameter>
+		<declaration>Coordinates currentPos;
+
+void move(){
+
+    Coordinates pos = randomMove(currentPos);
+
+    grid[currentPos.row][currentPos.column].professional=-1;
+    grid[pos.row][pos.column].professional=id;
+    currentPos=pos;
+}</declaration>
 		<location id="id0" x="-510" y="0">
 		</location>
 		<location id="id1" x="-187" y="0">
 			<urgent/>
 		</location>
-		<location id="id2" x="-748" y="0">
+		<location id="id2" x="-841" y="0">
 			<urgent/>
 		</location>
 		<init ref="id2"/>
@@ -248,6 +377,7 @@ Coordinates randomMove(Coordinates currentPos){
 			<source ref="id2"/>
 			<target ref="id0"/>
 			<label kind="synchronisation" x="-680" y="-17">start?</label>
+			<label kind="assignment" x="-790" y="0">currentPos=initProfessionals[id]</label>
 		</transition>
 		<transition id="id4">
 			<source ref="id1"/>
@@ -258,11 +388,80 @@ Coordinates randomMove(Coordinates currentPos){
 			<source ref="id0"/>
 			<target ref="id1"/>
 			<label kind="synchronisation" x="-425" y="-25">moveProfessional[id]?</label>
+			<label kind="assignment" x="-365" y="0">move()</label>
 		</transition>
 	</template>
 	<template>
 		<name>Drone</name>
 		<parameter>const id_dro_t id</parameter>
+		<declaration>Coordinates currentPos;
+
+bool isGoingBack=false;
+
+
+
+Coordinates moveHorizontally(Coordinates currPos){
+    Coordinates move;
+    move.row=currPos.row;
+    move.column=currPos.column;
+
+    if(isGoingBack){
+        if(currPos.column - droneRadius &lt;=0){
+            isGoingBack=false;
+            move.column++;
+            return move;
+        }
+        move.column--;
+
+    }else{
+        if(currPos.column + droneRadius &gt;= Ncolumns-1){
+            isGoingBack=true;
+            move.column--;
+            return move;
+        }
+        move.column++;
+    }
+
+    return move;
+
+}
+
+Coordinates moveVertically(Coordinates currPos){
+    Coordinates move;
+    move.row=currPos.row;
+    move.column=currPos.column;
+
+    if(isGoingBack){
+        if(currPos.row - droneRadius &lt;=0){
+            isGoingBack=false;
+            move.row++;
+            return move;
+        }
+        move.row--;
+
+    }else{
+        if(currPos.row + droneRadius &gt;= Nrows-1){
+            isGoingBack=true;
+            move.row--;
+            return move;
+        }
+        move.row++;
+    }
+
+    return move;
+
+}
+
+//what happens if 2 drones occupy the same cell?
+void move(){
+    Coordinates pos;
+    pos = moveHorizontally(currentPos);
+    grid[currentPos.row][currentPos.column].drone=-1;
+    grid[pos.row][pos.column].drone=id;
+    currentPos=pos;
+}
+
+</declaration>
 		<location id="id6" x="-518" y="-34">
 		</location>
 		<location id="id7" x="-297" y="-34">
@@ -271,14 +470,15 @@ Coordinates randomMove(Coordinates currentPos){
 		<location id="id8" x="-93" y="-34">
 			<urgent/>
 		</location>
-		<location id="id9" x="-748" y="-34">
+		<location id="id9" x="-807" y="-34">
 			<urgent/>
 		</location>
-		<init ref="id6"/>
+		<init ref="id9"/>
 		<transition id="id10">
 			<source ref="id9"/>
 			<target ref="id6"/>
 			<label kind="synchronisation" x="-663" y="-51">start?</label>
+			<label kind="assignment" x="-756" y="-34">currentPos=initDrones[id]</label>
 		</transition>
 		<transition id="id11">
 			<source ref="id8"/>
@@ -289,6 +489,7 @@ Coordinates randomMove(Coordinates currentPos){
 			<source ref="id7"/>
 			<target ref="id8"/>
 			<label kind="synchronisation" x="-255" y="-51">moveDrone[id]?</label>
+			<label kind="assignment" x="-229" y="-34">move()</label>
 		</transition>
 		<transition id="id13">
 			<source ref="id6"/>
@@ -305,21 +506,28 @@ double finishTime = -1;
 clock burningTimer;
 
 void move(){
-    Coordinates pos = randomMove(currentPos);
+    //random move
+    //Coordinates pos = randomMove(currentPos);
+    
+    //to closest exit
+    Coordinates closestExit = getClosestExit(currentPos);//can be computed only one time
+    Coordinates pos = moveToExit(currentPos,closestExit);
+
     grid[currentPos.row][currentPos.column].civilian=-1;
     grid[pos.row][pos.column].civilian=id;
     currentPos=pos;
 }
 
 void die(){
-    isInDanger[id]=false;
+    isOnTheGrid[id]=false;
+    noHelpNeededAt(currentPos);
     casualties++;
     grid[currentPos.row][currentPos.column].civilian=-1;
     finishTime=globalTime;
 }
 
 void escape(){
-    isInDanger[id]=false;
+    isOnTheGrid[id]=false;
     survivors++;
     grid[currentPos.row][currentPos.column].civilian=-1;
     finishTime=globalTime;
@@ -370,8 +578,9 @@ burningTime</label>
 		<transition id="id24">
 			<source ref="id17"/>
 			<target ref="id16"/>
-			<label kind="guard" x="-8" y="-382">burningTimer&lt;=burningTime</label>
-			<label kind="synchronisation" x="-8" y="-407">saveCivilian[id]?</label>
+			<label kind="guard" x="-8" y="-374">burningTimer&lt;=burningTime</label>
+			<label kind="synchronisation" x="-8" y="-399">saveCivilian[id]?</label>
+			<label kind="assignment" x="-8" y="-425">noHelpNeededAt(currentPos)</label>
 		</transition>
 		<transition id="id25">
 			<source ref="id17"/>
@@ -385,7 +594,8 @@ burningTime</label>
 			<target ref="id17"/>
 			<label kind="guard" x="-569" y="-408">!isCloseToExit(currentPos) &amp;&amp;
 isCloseToFire(currentPos)</label>
-			<label kind="assignment" x="-568" y="-426">burningTimer=0</label>
+			<label kind="assignment" x="-569" y="-450">burningTimer=0,
+neededHelpAt(currentPos)</label>
 		</transition>
 		<transition id="id27">
 			<source ref="id15"/>
@@ -418,7 +628,7 @@ int counter;
 void initGrid(){
     
     for ( i : id_civ_t)
-        isInDanger[i]=true;
+        isOnTheGrid[i]=true;
 
     //empty grid
     for (i : row_t){
@@ -469,162 +679,154 @@ void initGrid(){
 }
 
 </declaration>
-		<location id="id30" x="-1020" y="-8">
+		<location id="id30" x="-1037" y="51">
 			<urgent/>
 		</location>
-		<location id="id31" x="-705" y="-8">
-			<name x="-765" y="17">countCasualties</name>
-			<urgent/>
-		</location>
-		<location id="id32" x="-561" y="-127">
+		<location id="id31" x="-561" y="-127">
 			<name x="-680" y="-136">droneDetect</name>
 			<urgent/>
 		</location>
-		<location id="id33" x="-153" y="-136">
-			<name x="-204" y="-119">moveCivilians</name>
+		<location id="id32" x="-153" y="-127">
+			<name x="-204" y="-110">moveCivilians</name>
 			<urgent/>
 		</location>
-		<location id="id34" x="187" y="-136">
-			<name x="127" y="-119">moveProfessionals</name>
+		<location id="id33" x="187" y="-127">
+			<name x="127" y="-110">moveProfessionals</name>
 			<urgent/>
 		</location>
-		<location id="id35" x="561" y="-136">
-			<name x="586" y="-144">moveDrones</name>
+		<location id="id34" x="561" y="-127">
+			<name x="586" y="-135">moveDrones</name>
 			<urgent/>
 		</location>
-		<location id="id36" x="-153" y="110">
-			<name x="-187" y="67">waitTick</name>
-			<label kind="invariant" x="-195" y="127">moveTimer&lt;=1</label>
+		<location id="id35" x="-561" y="51">
+			<name x="-595" y="8">waitTick</name>
+			<label kind="invariant" x="-603" y="68">moveTimer&lt;=1</label>
 		</location>
-		<location id="id37" x="-561" y="-340">
+		<location id="id36" x="-561" y="-340">
 			<urgent/>
 		</location>
-		<location id="id38" x="552" y="-374">
+		<location id="id37" x="552" y="-374">
 			<urgent/>
 		</location>
-		<location id="id39" x="-153" y="-340">
+		<location id="id38" x="-153" y="-340">
 			<urgent/>
 		</location>
-		<location id="id40" x="187" y="-348">
+		<location id="id39" x="187" y="-348">
 			<label kind="comments" x="85" y="-391">CAN PROFESSIONALS DIE/ESCAPE?</label>
 			<urgent/>
 		</location>
-		<location id="id41" x="-153" y="-527">
+		<location id="id40" x="-153" y="-527">
 			<urgent/>
 		</location>
-		<location id="id42" x="-858" y="-8">
+		<location id="id41" x="-875" y="51">
 			<urgent/>
 		</location>
 		<init ref="id30"/>
+		<transition id="id42">
+			<source ref="id41"/>
+			<target ref="id35"/>
+			<label kind="synchronisation" x="-748" y="25">start!</label>
+		</transition>
 		<transition id="id43">
-			<source ref="id42"/>
-			<target ref="id31"/>
-			<label kind="synchronisation" x="-816" y="-34">start!</label>
+			<source ref="id38"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-263" y="-459">!isOnTheGrid[counter]</label>
 		</transition>
 		<transition id="id44">
-			<source ref="id39"/>
-			<target ref="id41"/>
-			<label kind="guard" x="-263" y="-459">!isInDanger[counter]</label>
-		</transition>
-		<transition id="id45">
-			<source ref="id39"/>
-			<target ref="id41"/>
-			<label kind="guard" x="-484" y="-476">isInDanger[counter]</label>
+			<source ref="id38"/>
+			<target ref="id40"/>
+			<label kind="guard" x="-484" y="-476">isOnTheGrid[counter]</label>
 			<label kind="synchronisation" x="-484" y="-459">moveCivilian[counter]!</label>
 			<nail x="-289" y="-382"/>
 			<nail x="-289" y="-501"/>
 		</transition>
-		<transition id="id46">
-			<source ref="id41"/>
-			<target ref="id33"/>
+		<transition id="id45">
+			<source ref="id40"/>
+			<target ref="id32"/>
 			<label kind="assignment" x="-111" y="-246">counter++</label>
 			<nail x="-68" y="-459"/>
 			<nail x="-68" y="-263"/>
 		</transition>
-		<transition id="id47">
-			<source ref="id40"/>
-			<target ref="id34"/>
+		<transition id="id46">
+			<source ref="id39"/>
+			<target ref="id33"/>
 			<label kind="assignment" x="221" y="-289">counter++</label>
 			<nail x="212" y="-238"/>
 		</transition>
-		<transition id="id48">
-			<source ref="id34"/>
-			<target ref="id40"/>
+		<transition id="id47">
+			<source ref="id33"/>
+			<target ref="id39"/>
 			<label kind="guard" x="-42" y="-280">counter &lt; Nprofessionals</label>
 			<label kind="synchronisation" x="-42" y="-297">moveProfessional[counter]!</label>
 			<nail x="161" y="-238"/>
 		</transition>
-		<transition id="id49">
-			<source ref="id33"/>
-			<target ref="id39"/>
+		<transition id="id48">
+			<source ref="id32"/>
+			<target ref="id38"/>
 			<label kind="guard" x="-331" y="-272">counter &lt; Ncivilians</label>
 			<nail x="-153" y="-280"/>
 		</transition>
-		<transition id="id50">
-			<source ref="id38"/>
-			<target ref="id35"/>
+		<transition id="id49">
+			<source ref="id37"/>
+			<target ref="id34"/>
 			<label kind="assignment" x="586" y="-323">counter++</label>
 			<nail x="595" y="-255"/>
 		</transition>
-		<transition id="id51">
-			<source ref="id35"/>
-			<target ref="id38"/>
+		<transition id="id50">
+			<source ref="id34"/>
+			<target ref="id37"/>
 			<label kind="guard" x="374" y="-340">counter&lt;Ndrones</label>
 			<label kind="synchronisation" x="374" y="-323">moveDrone[counter]!</label>
 			<nail x="518" y="-263"/>
 		</transition>
-		<transition id="id52">
-			<source ref="id37"/>
-			<target ref="id32"/>
+		<transition id="id51">
+			<source ref="id36"/>
+			<target ref="id31"/>
 			<label kind="assignment" x="-510" y="-263">counter++</label>
 			<nail x="-518" y="-246"/>
 		</transition>
-		<transition id="id53">
-			<source ref="id32"/>
-			<target ref="id37"/>
+		<transition id="id52">
+			<source ref="id31"/>
+			<target ref="id36"/>
 			<label kind="guard" x="-748" y="-246">counter&lt;Ndrones</label>
 			<label kind="synchronisation" x="-756" y="-263">detect[counter]!</label>
 			<nail x="-603" y="-246"/>
 		</transition>
-		<transition id="id54">
-			<source ref="id36"/>
-			<target ref="id31"/>
-			<label kind="guard" x="-467" y="85">moveTimer==1</label>
-			<label kind="assignment" x="-467" y="68">moveTimer=0</label>
-		</transition>
-		<transition id="id55">
+		<transition id="id53">
 			<source ref="id35"/>
-			<target ref="id36"/>
-			<label kind="guard" x="416" y="-51">counter == Ndrones</label>
-			<nail x="272" y="17"/>
+			<target ref="id31"/>
+			<label kind="guard" x="-552" y="-17">moveTimer==1</label>
+			<label kind="assignment" x="-552" y="-59">moveTimer=0,
+counter=0</label>
 		</transition>
-		<transition id="id56">
+		<transition id="id54">
 			<source ref="id34"/>
 			<target ref="id35"/>
-			<label kind="guard" x="272" y="-161">counter==Nprofessionals</label>
-			<label kind="assignment" x="357" y="-136">counter=0</label>
+			<label kind="guard" x="-195" y="51">counter == Ndrones</label>
+			<nail x="561" y="51"/>
 		</transition>
-		<transition id="id57">
+		<transition id="id55">
 			<source ref="id33"/>
 			<target ref="id34"/>
-			<label kind="guard" x="-76" y="-161">counter == Ncivilians</label>
-			<label kind="assignment" x="-17" y="-136">counter=0</label>
+			<label kind="guard" x="272" y="-153">counter==Nprofessionals</label>
+			<label kind="assignment" x="331" y="-127">counter=0</label>
 		</transition>
-		<transition id="id58">
+		<transition id="id56">
 			<source ref="id32"/>
 			<target ref="id33"/>
+			<label kind="guard" x="-68" y="-153">counter == Ncivilians</label>
+			<label kind="assignment" x="-17" y="-127">counter=0</label>
+		</transition>
+		<transition id="id57">
+			<source ref="id31"/>
+			<target ref="id32"/>
 			<label kind="guard" x="-374" y="-161">counter == Ndrones</label>
 			<label kind="assignment" x="-331" y="-127">counter=0</label>
 		</transition>
-		<transition id="id59">
-			<source ref="id31"/>
-			<target ref="id32"/>
-			<label kind="assignment" x="-612" y="-68">counter=0</label>
-		</transition>
-		<transition id="id60">
+		<transition id="id58">
 			<source ref="id30"/>
-			<target ref="id42"/>
-			<label kind="assignment" x="-977" y="0">initGrid(),
+			<target ref="id41"/>
+			<label kind="assignment" x="-1003" y="59">initGrid(),
 globalTime=0,
 moveTimer=0</label>
 		</transition>
