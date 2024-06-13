@@ -995,7 +995,7 @@ helpingTimer=0</label>
 		<transition id="id53">
 			<source ref="id33"/>
 			<target ref="id40"/>
-			<label kind="guard" x="-204" y="-782">burningTimer == burningTime</label>
+			<label kind="guard" x="-204" y="-782">burningTimer &gt;= burningTime</label>
 			<label kind="synchronisation" x="-170" y="-799">moveCivilian[id]?</label>
 			<label kind="assignment" x="-119" y="-764">die()</label>
 		</transition>
@@ -1154,25 +1154,34 @@ bool finished(){
 		<location id="id71" x="-875" y="51">
 			<urgent/>
 		</location>
-		<location id="id72" x="-561" y="212">
+		<location id="id72" x="-561" y="246">
 		</location>
 		<init ref="id60"/>
 		<transition id="id73">
-			<source ref="id65"/>
+			<source ref="id72"/>
 			<target ref="id72"/>
-			<label kind="guard" x="-561" y="119">finished()</label>
+			<nail x="-603" y="297"/>
+			<nail x="-527" y="297"/>
 		</transition>
 		<transition id="id74">
+			<source ref="id65"/>
+			<target ref="id72"/>
+			<label kind="guard" x="-561" y="127">finished()</label>
+			<label kind="assignment" x="-561" y="144">initGrid(),
+randomSeed=0</label>
+			<label kind="comments" x="-442" y="144">initGrid to reset everything for performance</label>
+		</transition>
+		<transition id="id75">
 			<source ref="id71"/>
 			<target ref="id65"/>
 			<label kind="synchronisation" x="-748" y="25">start!</label>
 		</transition>
-		<transition id="id75">
+		<transition id="id76">
 			<source ref="id68"/>
 			<target ref="id70"/>
 			<label kind="guard" x="-246" y="-442">!canCivMove(counter)</label>
 		</transition>
-		<transition id="id76">
+		<transition id="id77">
 			<source ref="id68"/>
 			<target ref="id70"/>
 			<label kind="guard" x="-450" y="-467">canCivMove(counter)</label>
@@ -1180,89 +1189,89 @@ bool finished(){
 			<nail x="-289" y="-382"/>
 			<nail x="-289" y="-501"/>
 		</transition>
-		<transition id="id77">
+		<transition id="id78">
 			<source ref="id70"/>
 			<target ref="id62"/>
 			<label kind="assignment" x="-59" y="-390">counter++</label>
 			<nail x="-68" y="-459"/>
 			<nail x="-68" y="-263"/>
 		</transition>
-		<transition id="id78">
+		<transition id="id79">
 			<source ref="id69"/>
 			<target ref="id63"/>
 			<label kind="assignment" x="221" y="-255">counter++</label>
 			<nail x="212" y="-238"/>
 		</transition>
-		<transition id="id79">
+		<transition id="id80">
 			<source ref="id63"/>
 			<target ref="id69"/>
 			<label kind="guard" x="-42" y="-263">counter &lt; Nprofessionals</label>
 			<label kind="synchronisation" x="-42" y="-289">moveProfessional[counter]!</label>
 			<nail x="161" y="-238"/>
 		</transition>
-		<transition id="id80">
+		<transition id="id81">
 			<source ref="id62"/>
 			<target ref="id68"/>
 			<label kind="guard" x="-331" y="-272">counter &lt; Ncivilians</label>
 		</transition>
-		<transition id="id81">
+		<transition id="id82">
 			<source ref="id67"/>
 			<target ref="id64"/>
 			<label kind="assignment" x="603" y="-272">counter++</label>
 			<nail x="595" y="-255"/>
 		</transition>
-		<transition id="id82">
+		<transition id="id83">
 			<source ref="id64"/>
 			<target ref="id67"/>
 			<label kind="guard" x="374" y="-340">counter&lt;Ndrones</label>
 			<label kind="synchronisation" x="374" y="-323">moveDrone[counter]!</label>
 			<nail x="518" y="-263"/>
 		</transition>
-		<transition id="id83">
+		<transition id="id84">
 			<source ref="id66"/>
 			<target ref="id61"/>
 			<label kind="assignment" x="-510" y="-238">counter++</label>
 			<nail x="-518" y="-246"/>
 		</transition>
-		<transition id="id84">
+		<transition id="id85">
 			<source ref="id61"/>
 			<target ref="id66"/>
 			<label kind="guard" x="-748" y="-246">counter&lt;Ndrones</label>
 			<label kind="synchronisation" x="-756" y="-263">detect[counter]!</label>
 			<nail x="-603" y="-246"/>
 		</transition>
-		<transition id="id85">
+		<transition id="id86">
 			<source ref="id65"/>
 			<target ref="id61"/>
 			<label kind="guard" x="-552" y="-43">!finished()</label>
 			<label kind="assignment" x="-552" y="-85">moveTimer=0,
 counter=0</label>
 		</transition>
-		<transition id="id86">
+		<transition id="id87">
 			<source ref="id64"/>
 			<target ref="id65"/>
 			<label kind="guard" x="-119" y="25">counter == Ndrones</label>
 			<nail x="561" y="51"/>
 		</transition>
-		<transition id="id87">
+		<transition id="id88">
 			<source ref="id63"/>
 			<target ref="id64"/>
 			<label kind="guard" x="272" y="-153">counter==Nprofessionals</label>
 			<label kind="assignment" x="331" y="-127">counter=0</label>
 		</transition>
-		<transition id="id88">
+		<transition id="id89">
 			<source ref="id62"/>
 			<target ref="id63"/>
 			<label kind="guard" x="-68" y="-153">counter == Ncivilians</label>
 			<label kind="assignment" x="-17" y="-127">counter=0</label>
 		</transition>
-		<transition id="id89">
+		<transition id="id90">
 			<source ref="id61"/>
 			<target ref="id62"/>
 			<label kind="guard" x="-374" y="-161">counter == Ndrones</label>
 			<label kind="assignment" x="-331" y="-127">counter=0</label>
 		</transition>
-		<transition id="id90">
+		<transition id="id91">
 			<source ref="id60"/>
 			<target ref="id71"/>
 			<label kind="select" x="-1147" y="25">randomN : int[0,randomness-1]</label>
@@ -1294,9 +1303,6 @@ system Clock,Drone,Civilian,Professional;
 			<formula>A[] not deadlock</formula>
 			<comment>check if there is any deadlock</comment>
 			<option key="--diagnostic" value="0"/>
-			<result outcome="failure" type="quality" timestamp="2024-06-13 18:19:26 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula/>
@@ -1305,6 +1311,9 @@ system Clock,Drone,Civilian,Professional;
 		<query>
 			<formula>E&lt;&gt; forall (i:id_civ_t) Civilian(i).safe</formula>
 			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-06-13 18:37:39 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
 		</query>
 	</queries>
 </nta>
