@@ -66,9 +66,9 @@ const Coordinates_t initExits[Nexits] = {
 //Assistance
 
 const int droneRadius = 6; //Nv 
-const int burningTime = 10; //Tv
-const int proAssistanceTime = 3; //Tfr 
-const int civAssistanceTime = 4; //Tzr
+const int burningTime = 5; //Tv
+const int proAssistanceTime = 2; //Tfr 
+const int civAssistanceTime = 3; //Tzr
 
 
 
@@ -894,6 +894,7 @@ void sendInfoToPro(){
 		</location>
 		<location id="id33" x="-511" y="-739">
 			<name x="-603" y="-756">burning</name>
+			<label kind="invariant" x="-739" y="-739">burningTimer&lt;=burningTime</label>
 		</location>
 		<location id="id34" x="433" y="-263">
 			<name x="423" y="-297">safe</name>
@@ -995,8 +996,7 @@ helpingTimer=0</label>
 		<transition id="id53">
 			<source ref="id33"/>
 			<target ref="id40"/>
-			<label kind="guard" x="-204" y="-782">burningTimer &gt;= burningTime</label>
-			<label kind="synchronisation" x="-170" y="-799">moveCivilian[id]?</label>
+			<label kind="guard" x="-204" y="-782">burningTimer == burningTime</label>
 			<label kind="assignment" x="-119" y="-764">die()</label>
 		</transition>
 		<transition id="id54">
@@ -1155,11 +1155,15 @@ bool finished(){
 			<urgent/>
 		</location>
 		<location id="id72" x="-561" y="246">
+			<name x="-535" y="238">finish</name>
+			<label kind="invariant" x="-680" y="238">moveTimer&lt;=1</label>
 		</location>
 		<init ref="id60"/>
 		<transition id="id73">
 			<source ref="id72"/>
 			<target ref="id72"/>
+			<label kind="guard" x="-612" y="297">moveTimer==1</label>
+			<label kind="assignment" x="-612" y="314">moveTimer=0</label>
 			<nail x="-603" y="297"/>
 			<nail x="-527" y="297"/>
 		</transition>
@@ -1168,7 +1172,8 @@ bool finished(){
 			<target ref="id72"/>
 			<label kind="guard" x="-561" y="127">finished()</label>
 			<label kind="assignment" x="-561" y="144">initGrid(),
-randomSeed=0</label>
+randomSeed=0,
+moveTimer=0</label>
 			<label kind="comments" x="-442" y="144">initGrid to reset everything for performance</label>
 		</transition>
 		<transition id="id75">
@@ -1243,7 +1248,7 @@ randomSeed=0</label>
 		<transition id="id86">
 			<source ref="id65"/>
 			<target ref="id61"/>
-			<label kind="guard" x="-552" y="-43">!finished()</label>
+			<label kind="guard" x="-552" y="-43">!finished() &amp;&amp; moveTimer==1</label>
 			<label kind="assignment" x="-552" y="-85">moveTimer=0,
 counter=0</label>
 		</transition>
@@ -1298,11 +1303,17 @@ system Clock,Drone,Civilian,Professional;
 		<query>
 			<formula>Clock.moveTimer == 0 --&gt; Clock.moveTimer == 1</formula>
 			<comment>check if there are zeno path</comment>
+			<result outcome="success" type="quality" timestamp="2024-06-13 22:02:00 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
 		</query>
 		<query>
 			<formula>A[] not deadlock</formula>
 			<comment>check if there is any deadlock</comment>
 			<option key="--diagnostic" value="0"/>
+			<result outcome="success" type="quality" timestamp="2024-06-13 21:53:47 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
 		</query>
 		<query>
 			<formula/>
