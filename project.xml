@@ -109,7 +109,6 @@ typedef struct
 //channels
 broadcast chan start;
 chan detect[Ndrones];
-chan detectDone[Ndrones];
 chan moveDrone[Ndrones];
 chan moveCivilian[Ncivilians];
 chan moveProfessional[Nprofessionals];
@@ -824,7 +823,6 @@ civilians[action.survivor].proToCall=action.professional</label>
 			<source ref="id26"/>
 			<target ref="id25"/>
 			<label kind="guard" x="-145" y="-144">action.doNothing</label>
-			<label kind="synchronisation" x="-144" y="-110">detectDone[id]!</label>
 			<label kind="assignment" x="-144" y="-127">clearDetectionData()</label>
 		</transition>
 		<transition id="id34">
@@ -1320,8 +1318,7 @@ moveTimer=0</label>
 		<transition id="id95">
 			<source ref="id74"/>
 			<target ref="id69"/>
-			<label kind="synchronisation" x="-510" y="-255">detectDone[counter]?</label>
-			<label kind="assignment" x="-510" y="-238">counter++</label>
+			<label kind="assignment" x="-510" y="-246">counter++</label>
 			<nail x="-518" y="-246"/>
 		</transition>
 		<transition id="id96">
@@ -1397,7 +1394,7 @@ system Clock,Drone,Civilian,Professional;
 			<formula>A[] not deadlock</formula>
 			<comment>check if there is any deadlock</comment>
 			<option key="--diagnostic" value="0"/>
-			<result outcome="success" type="quality" timestamp="2024-06-14 14:11:50 +0200">
+			<result outcome="success" type="quality" timestamp="2024-06-14 15:05:36 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
