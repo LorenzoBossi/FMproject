@@ -983,20 +983,20 @@ void sendInfoToPro(){
 
 
 </declaration>
-		<location id="id43" x="-510" y="-25">
-			<name x="-493" y="-42">canMove</name>
+		<location id="id43" x="-561" y="-25">
+			<name x="-544" y="-51">canMove</name>
 		</location>
-		<location id="id44" x="-510" y="-263">
-			<label kind="comments" x="-332" y="-246">close even in diagonal??</label>
+		<location id="id44" x="-561" y="-263">
+			<label kind="comments" x="-383" y="-246">close even in diagonal??</label>
 			<urgent/>
 		</location>
 		<location id="id45" x="136" y="-263">
 			<urgent/>
 		</location>
-		<location id="id46" x="-511" y="-739">
-			<name x="-603" y="-756">burning</name>
-			<label kind="invariant" x="-739" y="-739">burningTimer&lt;=burningTime</label>
-			<label kind="comments" x="-620" y="-824">readyToHelp[id] maybe not needed,
+		<location id="id46" x="-561" y="-739">
+			<name x="-653" y="-756">burning</name>
+			<label kind="invariant" x="-789" y="-739">burningTimer&lt;=burningTime</label>
+			<label kind="comments" x="-670" y="-824">readyToHelp[id] maybe not needed,
 
 removed moveCivilian</label>
 		</location>
@@ -1010,187 +1010,194 @@ removed moveCivilian</label>
 			<name x="-212" y="-493">beingHelped</name>
 			<label kind="invariant" x="-197" y="-450">burningTimer&lt;=burningTime</label>
 		</location>
-		<location id="id50" x="-229" y="161">
+		<location id="id50" x="-331" y="212">
 			<committed/>
 		</location>
-		<location id="id51" x="-909" y="93">
-			<name x="-986" y="84">callPro</name>
+		<location id="id51" x="-799" y="213">
+			<name x="-876" y="204">callPro</name>
 			<committed/>
 		</location>
-		<location id="id52" x="-229" y="365">
-			<name x="-212" y="340">helpingCiv</name>
-			<label kind="invariant" x="-331" y="374">helpingTimer&lt;=timeToHelp</label>
+		<location id="id52" x="-331" y="365">
+			<name x="-382" y="382">helpingCiv</name>
+			<label kind="invariant" x="-544" y="357">helpingTimer&lt;=timeToHelp</label>
 		</location>
 		<location id="id53" x="595" y="-739">
 			<name x="585" y="-773">dead</name>
 		</location>
-		<location id="id54" x="-909" y="314">
-			<name x="-892" y="297">waitingPro</name>
+		<location id="id54" x="-799" y="374">
+			<name x="-782" y="357">waitingPro</name>
 		</location>
-		<location id="id55" x="-680" y="25">
+		<location id="id55" x="-799" y="8">
 			<committed/>
 		</location>
-		<location id="id56" x="-391" y="59">
+		<location id="id56" x="-331" y="17">
 			<committed/>
 		</location>
-		<branchpoint id="id57" x="-331" y="102"/>
-		<branchpoint id="id58" x="-731" y="42"/>
+		<location id="id57" x="-119" y="450">
+			<label kind="invariant" x="-204" y="467">helpingTimer&lt;=timeToHelp</label>
+		</location>
+		<branchpoint id="id58" x="-331" y="85"/>
+		<branchpoint id="id59" x="-799" y="85"/>
 		<init ref="id48"/>
-		<transition id="id59">
-			<source ref="id43"/>
-			<target ref="id56"/>
-			<label kind="synchronisation" x="-433" y="-8">civHelpCiv[id]?</label>
-		</transition>
 		<transition id="id60">
-			<source ref="id43"/>
-			<target ref="id55"/>
-			<label kind="synchronisation" x="-671" y="-42">civCallPro[id]?</label>
+			<source ref="id57"/>
+			<target ref="id45"/>
+			<label kind="guard" x="-76" y="425">helpingTimer==timeToHelp</label>
+			<label kind="assignment" x="-25" y="450">timeToHelp=0</label>
+			<nail x="136" y="450"/>
 		</transition>
 		<transition id="id61">
-			<source ref="id57"/>
-			<target ref="id43"/>
-			<label kind="probability" x="-442" y="119">1-pListen</label>
-			<nail x="-408" y="119"/>
+			<source ref="id43"/>
+			<target ref="id56"/>
+			<label kind="synchronisation" x="-450" y="-25">civHelpCiv[id]?</label>
 		</transition>
 		<transition id="id62">
-			<source ref="id57"/>
-			<target ref="id50"/>
-			<label kind="assignment" x="-280" y="68">civilians[id].isBusy=true,
-civilians[getCivToHelp()].isBusy=true,
-readyToMoveCiv[id]=false</label>
-			<label kind="probability" x="-323" y="135">pListen</label>
+			<source ref="id43"/>
+			<target ref="id55"/>
+			<label kind="synchronisation" x="-773" y="-42">civCallPro[id]?</label>
 		</transition>
-		<transition id="id63" controllable="false">
-			<source ref="id56"/>
-			<target ref="id57"/>
+		<transition id="id63">
+			<source ref="id58"/>
+			<target ref="id43"/>
+			<label kind="probability" x="-450" y="59">1-pListen</label>
+			<nail x="-493" y="85"/>
 		</transition>
 		<transition id="id64">
 			<source ref="id58"/>
-			<target ref="id43"/>
-			<label kind="probability" x="-697" y="85">1-pListen</label>
-			<nail x="-671" y="85"/>
-		</transition>
-		<transition id="id65">
-			<source ref="id58"/>
-			<target ref="id51"/>
-			<label kind="assignment" x="-1071" y="17">civilians[id].isBusy=true,
+			<target ref="id50"/>
+			<label kind="assignment" x="-323" y="119">civilians[id].isBusy=true,
 civilians[getCivToHelp()].isBusy=true,
 readyToMoveCiv[id]=false</label>
-			<label kind="probability" x="-841" y="76">pListen</label>
+			<label kind="probability" x="-399" y="136">pListen</label>
 		</transition>
-		<transition id="id66" controllable="false">
-			<source ref="id55"/>
+		<transition id="id65" controllable="false">
+			<source ref="id56"/>
 			<target ref="id58"/>
 		</transition>
-		<transition id="id67">
-			<source ref="id54"/>
-			<target ref="id45"/>
-			<label kind="synchronisation" x="-501" y="501">saveCivilian[id]?</label>
-			<nail x="-909" y="493"/>
-			<nail x="136" y="493"/>
+		<transition id="id66">
+			<source ref="id59"/>
+			<target ref="id43"/>
+			<label kind="probability" x="-731" y="59">1-pListen</label>
+			<nail x="-629" y="85"/>
 		</transition>
-		<transition id="id68">
-			<source ref="id51"/>
-			<target ref="id54"/>
-			<label kind="guard" x="-892" y="153">readyToMovePro[getProToCall()]</label>
-			<label kind="synchronisation" x="-892" y="170">helpRequest[getProToCall()]!</label>
-			<label kind="assignment" x="-892" y="187">sendInfoToPro()</label>
+		<transition id="id67">
+			<source ref="id59"/>
+			<target ref="id51"/>
+			<label kind="assignment" x="-1147" y="119">civilians[id].isBusy=true,
+civilians[getCivToHelp()].isBusy=true,
+readyToMoveCiv[id]=false</label>
+			<label kind="probability" x="-790" y="136">pListen</label>
+		</transition>
+		<transition id="id68" controllable="false">
+			<source ref="id55"/>
+			<target ref="id59"/>
 		</transition>
 		<transition id="id69">
-			<source ref="id52"/>
-			<target ref="id43"/>
-			<label kind="synchronisation" x="-697" y="238">died[getCivToHelp()]?</label>
-			<label kind="assignment" x="-723" y="255">civilians[id].isBusy=false,
-readyToMoveCiv[id]=true</label>
-			<nail x="-510" y="365"/>
+			<source ref="id54"/>
+			<target ref="id45"/>
+			<label kind="synchronisation" x="-578" y="484">saveCivilian[id]?</label>
+			<nail x="-799" y="519"/>
+			<nail x="136" y="518"/>
 		</transition>
 		<transition id="id70">
-			<source ref="id52"/>
-			<target ref="id45"/>
-			<label kind="guard" x="-110" y="374">helpingTimer==timeToHelp</label>
-			<label kind="synchronisation" x="-110" y="391">saveCivilian[getCivToHelp()]!</label>
-			<label kind="assignment" x="-110" y="408">timeToHelp=0</label>
-			<nail x="136" y="365"/>
+			<source ref="id51"/>
+			<target ref="id54"/>
+			<label kind="guard" x="-790" y="247">readyToMovePro[getProToCall()]</label>
+			<label kind="synchronisation" x="-790" y="264">helpRequest[getProToCall()]!</label>
+			<label kind="assignment" x="-790" y="281">sendInfoToPro()</label>
 		</transition>
 		<transition id="id71">
-			<source ref="id50"/>
-			<target ref="id52"/>
-			<label kind="synchronisation" x="-280" y="51">startHelping[getCivToHelp()]!</label>
-			<label kind="assignment" x="-221" y="203">getTimeToHelpCivilian(),
-helpingTimer=0</label>
+			<source ref="id52"/>
+			<target ref="id57"/>
+			<label kind="synchronisation" x="-348" y="425">died[getCivToHelp()]?</label>
 		</transition>
 		<transition id="id72">
+			<source ref="id52"/>
+			<target ref="id45"/>
+			<label kind="guard" x="-136" y="323">helpingTimer==timeToHelp</label>
+			<label kind="synchronisation" x="-136" y="340">saveCivilian[getCivToHelp()]!</label>
+			<label kind="assignment" x="-136" y="365">timeToHelp=0</label>
+			<nail x="136" y="365"/>
+		</transition>
+		<transition id="id73">
+			<source ref="id50"/>
+			<target ref="id52"/>
+			<label kind="synchronisation" x="-323" y="247">startHelping[getCivToHelp()]!</label>
+			<label kind="assignment" x="-323" y="263">getTimeToHelpCivilian(),
+helpingTimer=0</label>
+		</transition>
+		<transition id="id74">
 			<source ref="id49"/>
 			<target ref="id53"/>
 			<label kind="guard" x="221" y="-603">burningTimer == burningTime</label>
 			<label kind="synchronisation" x="221" y="-586">died[id]!</label>
 			<label kind="assignment" x="221" y="-569">die()</label>
 		</transition>
-		<transition id="id73">
+		<transition id="id75">
 			<source ref="id46"/>
 			<target ref="id49"/>
 			<label kind="synchronisation" x="-289" y="-637">startHelping[id]?</label>
 			<label kind="assignment" x="-289" y="-620">readyToBeHelped[id]=false,
 civilians[id].isBusy=true</label>
 		</transition>
-		<transition id="id74">
+		<transition id="id76">
 			<source ref="id48"/>
 			<target ref="id44"/>
-			<label kind="synchronisation" x="-773" y="-306">start?</label>
-			<label kind="assignment" x="-773" y="-289">setCurrPos(initCivilians[id])</label>
+			<label kind="synchronisation" x="-824" y="-306">start?</label>
+			<label kind="assignment" x="-824" y="-289">setCurrPos(initCivilians[id])</label>
 		</transition>
-		<transition id="id75">
+		<transition id="id77">
 			<source ref="id45"/>
 			<target ref="id47"/>
 			<label kind="assignment" x="203" y="-263">escape()</label>
 		</transition>
-		<transition id="id76">
+		<transition id="id78">
 			<source ref="id46"/>
 			<target ref="id53"/>
 			<label kind="guard" x="-204" y="-782">burningTimer == burningTime</label>
 			<label kind="assignment" x="-204" y="-756">die(),
 readyToBeHelped[id]=false</label>
 		</transition>
-		<transition id="id77">
+		<transition id="id79">
 			<source ref="id49"/>
 			<target ref="id45"/>
 			<label kind="guard" x="24" y="-374">burningTimer &lt; burningTime</label>
 			<label kind="synchronisation" x="24" y="-399">saveCivilian[id]?</label>
 			<label kind="assignment" x="24" y="-425">noHelpNeededAt(getCurrPos())</label>
 		</transition>
-		<transition id="id78">
+		<transition id="id80">
 			<source ref="id44"/>
 			<target ref="id46"/>
-			<label kind="guard" x="-765" y="-552">!isCloseToExit(getCurrPos()) &amp;&amp;
+			<label kind="guard" x="-833" y="-492">!isCloseToExit(getCurrPos()) &amp;&amp;
 isCloseToFire(getCurrPos())</label>
-			<label kind="assignment" x="-765" y="-629">burningTimer=0,
+			<label kind="assignment" x="-833" y="-569">burningTimer=0,
 neededHelpAt(getCurrPos()),
 readyToBeHelped[id]=true</label>
 		</transition>
-		<transition id="id79">
+		<transition id="id81">
 			<source ref="id44"/>
 			<target ref="id45"/>
 			<label kind="guard" x="-332" y="-288">isCloseToExit(getCurrPos())</label>
 		</transition>
-		<transition id="id80">
+		<transition id="id82">
 			<source ref="id44"/>
 			<target ref="id43"/>
-			<label kind="guard" x="-450" y="-144">!isCloseToExit(getCurrPos()) &amp;&amp;
+			<label kind="guard" x="-501" y="-144">!isCloseToExit(getCurrPos()) &amp;&amp;
 !isCloseToFire(getCurrPos())</label>
-			<label kind="assignment" x="-450" y="-110">readyToMoveCiv[id]=true</label>
-			<nail x="-467" y="-136"/>
+			<label kind="assignment" x="-501" y="-110">readyToMoveCiv[id]=true</label>
+			<nail x="-518" y="-136"/>
 		</transition>
-		<transition id="id81">
+		<transition id="id83">
 			<source ref="id43"/>
 			<target ref="id44"/>
-			<label kind="synchronisation" x="-705" y="-161">moveCivilian[id]?</label>
-			<label kind="assignment" x="-739" y="-144">move(),
+			<label kind="synchronisation" x="-756" y="-161">moveCivilian[id]?</label>
+			<label kind="assignment" x="-790" y="-144">move(),
 readyToMoveCiv[id]=false</label>
-			<nail x="-544" y="-136"/>
+			<nail x="-595" y="-136"/>
 		</transition>
 	</template>
 	<template>
-		<name x="5" y="5">Clock</name>
+		<name x="5" y="5">Controller</name>
 		<declaration>// Place local declarations here.
 clock moveTimer;
 
@@ -1264,194 +1271,194 @@ bool finished(){
 }
 
 </declaration>
-		<location id="id82" x="-1190" y="51">
+		<location id="id84" x="-1190" y="51">
 			<name x="-1200" y="17">starting</name>
 			<urgent/>
 		</location>
-		<location id="id83" x="-561" y="-127">
+		<location id="id85" x="-561" y="-127">
 			<name x="-680" y="-136">droneDetect</name>
 			<urgent/>
 		</location>
-		<location id="id84" x="-161" y="-127">
+		<location id="id86" x="-161" y="-127">
 			<name x="-212" y="-110">moveCivilians</name>
 			<urgent/>
 		</location>
-		<location id="id85" x="212" y="-127">
+		<location id="id87" x="212" y="-127">
 			<name x="152" y="-110">moveProfessionals</name>
 			<urgent/>
 		</location>
-		<location id="id86" x="561" y="-127">
+		<location id="id88" x="561" y="-127">
 			<name x="586" y="-135">moveDrones</name>
 			<urgent/>
 		</location>
-		<location id="id87" x="-561" y="51">
+		<location id="id89" x="-561" y="51">
 			<name x="-595" y="8">waitTick</name>
 			<label kind="invariant" x="-603" y="68">moveTimer&lt;=1</label>
 		</location>
-		<location id="id88" x="-561" y="-340">
+		<location id="id90" x="-561" y="-340">
 			<name x="-612" y="-374">waitingDetection</name>
 			<urgent/>
 		</location>
-		<location id="id89" x="552" y="-374">
+		<location id="id91" x="552" y="-374">
 			<urgent/>
 		</location>
-		<location id="id90" x="-161" y="-340">
+		<location id="id92" x="-161" y="-340">
 			<urgent/>
 		</location>
-		<location id="id91" x="212" y="-306">
+		<location id="id93" x="212" y="-306">
 			<label kind="comments" x="101" y="-578">CAN PROFESSIONALS DIE/ESCAPE?</label>
 			<urgent/>
 		</location>
-		<location id="id92" x="-161" y="-527">
+		<location id="id94" x="-161" y="-527">
 			<urgent/>
 		</location>
-		<location id="id93" x="-875" y="51">
+		<location id="id95" x="-875" y="51">
 			<urgent/>
 		</location>
-		<location id="id94" x="-561" y="246">
+		<location id="id96" x="-561" y="246">
 			<name x="-535" y="238">finish</name>
 			<label kind="invariant" x="-680" y="238">moveTimer&lt;=1</label>
 		</location>
-		<location id="id95" x="212" y="-535">
+		<location id="id97" x="212" y="-535">
 			<urgent/>
 		</location>
-		<init ref="id82"/>
-		<transition id="id96">
-			<source ref="id91"/>
-			<target ref="id95"/>
+		<init ref="id84"/>
+		<transition id="id98">
+			<source ref="id93"/>
+			<target ref="id97"/>
 			<label kind="guard" x="153" y="-408">!canProMove(counter)</label>
 		</transition>
-		<transition id="id97">
-			<source ref="id85"/>
-			<target ref="id91"/>
+		<transition id="id99">
+			<source ref="id87"/>
+			<target ref="id93"/>
 			<label kind="guard" x="-17" y="-246">counter &lt; Nprofessionals</label>
 		</transition>
-		<transition id="id98">
-			<source ref="id94"/>
-			<target ref="id94"/>
+		<transition id="id100">
+			<source ref="id96"/>
+			<target ref="id96"/>
 			<label kind="guard" x="-612" y="297">moveTimer==1</label>
 			<label kind="assignment" x="-612" y="314">moveTimer=0</label>
 			<nail x="-603" y="297"/>
 			<nail x="-527" y="297"/>
 		</transition>
-		<transition id="id99">
-			<source ref="id87"/>
-			<target ref="id94"/>
+		<transition id="id101">
+			<source ref="id89"/>
+			<target ref="id96"/>
 			<label kind="guard" x="-561" y="127">finished()</label>
 			<label kind="assignment" x="-561" y="144">initGrid(),
 randomSeed=0,
 moveTimer=0</label>
 			<label kind="comments" x="-442" y="144">initGrid to reset everything for performance</label>
 		</transition>
-		<transition id="id100">
-			<source ref="id93"/>
-			<target ref="id87"/>
+		<transition id="id102">
+			<source ref="id95"/>
+			<target ref="id89"/>
 			<label kind="synchronisation" x="-748" y="25">start!</label>
 		</transition>
-		<transition id="id101">
-			<source ref="id90"/>
-			<target ref="id92"/>
+		<transition id="id103">
+			<source ref="id92"/>
+			<target ref="id94"/>
 			<label kind="guard" x="-246" y="-442">!canCivMove(counter)</label>
 		</transition>
-		<transition id="id102">
-			<source ref="id90"/>
-			<target ref="id92"/>
+		<transition id="id104">
+			<source ref="id92"/>
+			<target ref="id94"/>
 			<label kind="guard" x="-476" y="-476">canCivMove(counter) &amp;&amp;
 readyToMoveCiv[counter]</label>
 			<label kind="synchronisation" x="-467" y="-433">moveCivilian[counter]!</label>
 			<nail x="-289" y="-382"/>
 			<nail x="-289" y="-501"/>
 		</transition>
-		<transition id="id103">
-			<source ref="id92"/>
-			<target ref="id84"/>
+		<transition id="id105">
+			<source ref="id94"/>
+			<target ref="id86"/>
 			<label kind="assignment" x="-59" y="-348">counter++</label>
 			<nail x="-68" y="-459"/>
 			<nail x="-68" y="-263"/>
 		</transition>
-		<transition id="id104">
-			<source ref="id95"/>
-			<target ref="id85"/>
+		<transition id="id106">
+			<source ref="id97"/>
+			<target ref="id87"/>
 			<label kind="assignment" x="289" y="-255">counter++</label>
 			<nail x="289" y="-459"/>
 			<nail x="289" y="-238"/>
 		</transition>
-		<transition id="id105">
-			<source ref="id91"/>
-			<target ref="id95"/>
+		<transition id="id107">
+			<source ref="id93"/>
+			<target ref="id97"/>
 			<label kind="guard" x="-34" y="-501">canProMove(counter) &amp;&amp;
 readyToMovePro[counter]</label>
 			<label kind="synchronisation" x="-34" y="-518">moveProfessional[counter]!</label>
 			<nail x="144" y="-348"/>
 			<nail x="144" y="-450"/>
 		</transition>
-		<transition id="id106">
-			<source ref="id84"/>
-			<target ref="id90"/>
+		<transition id="id108">
+			<source ref="id86"/>
+			<target ref="id92"/>
 			<label kind="guard" x="-331" y="-272">counter &lt; Ncivilians</label>
 		</transition>
-		<transition id="id107">
-			<source ref="id89"/>
-			<target ref="id86"/>
+		<transition id="id109">
+			<source ref="id91"/>
+			<target ref="id88"/>
 			<label kind="assignment" x="603" y="-272">counter++</label>
 			<nail x="595" y="-255"/>
 		</transition>
-		<transition id="id108">
-			<source ref="id86"/>
-			<target ref="id89"/>
+		<transition id="id110">
+			<source ref="id88"/>
+			<target ref="id91"/>
 			<label kind="guard" x="365" y="-340">counter&lt;Ndrones &amp;&amp;
 readyToMoveDrone[counter]</label>
 			<label kind="synchronisation" x="365" y="-297">moveDrone[counter]!</label>
 			<nail x="518" y="-263"/>
 		</transition>
-		<transition id="id109">
-			<source ref="id88"/>
-			<target ref="id83"/>
+		<transition id="id111">
+			<source ref="id90"/>
+			<target ref="id85"/>
 			<label kind="assignment" x="-510" y="-246">counter++</label>
 			<nail x="-518" y="-246"/>
 		</transition>
-		<transition id="id110">
-			<source ref="id83"/>
-			<target ref="id88"/>
+		<transition id="id112">
+			<source ref="id85"/>
+			<target ref="id90"/>
 			<label kind="guard" x="-773" y="-246">counter&lt;Ndrones &amp;&amp;
 readyToDetect[counter]</label>
 			<label kind="synchronisation" x="-756" y="-263">detect[counter]!</label>
 			<nail x="-603" y="-246"/>
 		</transition>
-		<transition id="id111">
-			<source ref="id87"/>
-			<target ref="id83"/>
+		<transition id="id113">
+			<source ref="id89"/>
+			<target ref="id85"/>
 			<label kind="guard" x="-552" y="-43">!finished() &amp;&amp; moveTimer==1</label>
 			<label kind="assignment" x="-552" y="-85">moveTimer=0,
 counter=0</label>
 		</transition>
-		<transition id="id112">
-			<source ref="id86"/>
-			<target ref="id87"/>
+		<transition id="id114">
+			<source ref="id88"/>
+			<target ref="id89"/>
 			<label kind="guard" x="-119" y="25">counter == Ndrones</label>
 			<nail x="561" y="51"/>
 		</transition>
-		<transition id="id113">
-			<source ref="id85"/>
-			<target ref="id86"/>
+		<transition id="id115">
+			<source ref="id87"/>
+			<target ref="id88"/>
 			<label kind="guard" x="272" y="-153">counter==Nprofessionals</label>
 			<label kind="assignment" x="331" y="-127">counter=0</label>
 		</transition>
-		<transition id="id114">
-			<source ref="id84"/>
-			<target ref="id85"/>
+		<transition id="id116">
+			<source ref="id86"/>
+			<target ref="id87"/>
 			<label kind="guard" x="-68" y="-153">counter == Ncivilians</label>
 			<label kind="assignment" x="-17" y="-127">counter=0</label>
 		</transition>
-		<transition id="id115">
-			<source ref="id83"/>
-			<target ref="id84"/>
+		<transition id="id117">
+			<source ref="id85"/>
+			<target ref="id86"/>
 			<label kind="guard" x="-433" y="-153">counter == Ndrones</label>
 			<label kind="assignment" x="-399" y="-127">counter=0</label>
 		</transition>
-		<transition id="id116">
-			<source ref="id82"/>
-			<target ref="id93"/>
+		<transition id="id118">
+			<source ref="id84"/>
+			<target ref="id95"/>
 			<label kind="assignment" x="-1071" y="59">initGrid(),
 globalTime=0,
 moveTimer=0,
@@ -1462,7 +1469,7 @@ randomSeed=0</label>
 
 
 // List one or more processes to be composed into a system.
-system Clock,Drone,Civilian,Professional;
+system Controller,Drone,Civilian,Professional;
 
 </system>
 	<queries>
@@ -1722,6 +1729,18 @@ Mean estimate of displayed sample: 23.634 ± 0.16612 (95% CI)</comment>
 				<option key="--diagnostic" value="0"/>
 				<details>≤ 0.0499441 (95% CI)</details>
 			</result>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
 		</query>
 	</queries>
 </nta>
