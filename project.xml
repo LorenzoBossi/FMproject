@@ -8,11 +8,122 @@
 
 //----- CONFIGURATIONS -----
 
+
+//BIG GRID SCENARIO
+const int Nrows = 20;
+const int Ncolumns = 20;
+
+const bool disableDrones=false;
+const int Ndrones = 2;
+const int Ncivilians = 11;
+const int Nprofessionals = 5;
+ 
+const int Nexits = 8;
+const int Nfires = 23;
+
+
+typedef int[0,Ncivilians-1] id_civ_t;
+typedef int[0,Nprofessionals-1] id_pro_t;
+typedef int[0,Ndrones-1] id_dro_t;
+typedef int[0,Nrows-1] row_t;
+typedef int[0,Ncolumns-1] col_t;
+
+typedef struct{
+    row_t row;
+    col_t column; 
+} Coordinates_t;
+
+
+const Coordinates_t initCivilians[Ncivilians] = {
+{5,5},
+{7,14},
+{8,2},
+{8,8},
+{9,11},
+{11,4},
+{11,12},
+{11,18},
+{12,9},
+{14,6},
+{15,10}
+};
+
+const Coordinates_t initProfessionals[Nprofessionals] = {
+{2,2},
+{2,17},
+{10,7},
+{13,19},
+{17,5}
+};
+
+const Coordinates_t initDrones[Ndrones] = {
+
+{4,15},
+{15,4}
+
+};
+
+//Fire cells must be contiguous!!!
+const Coordinates_t initFires[Nfires] = {
+{3,9},
+{3,10},
+{4,8},
+{4,9},
+{4,10},
+{4,11},
+{5,8},
+{5,9},
+{5,10},
+{5,11},
+{5,12},
+{6,9},
+{6,10},
+{6,11},
+{7,10},
+
+{17,14},
+{16,13},
+{16,14},
+{16,15},
+{15,14},
+{15,15},
+{15,16},
+{14,15}
+
+};
+
+//Exits must be on the boundary of the grid
+const Coordinates_t initExits[Nexits] = {
+{0,3},
+{0,4},
+{0,15},
+{0,16},
+{19,3},
+{19,4},
+{19,15},
+{19,16}
+};
+
+
+//Assistance
+
+const int droneRadius = 4; //Nv 
+const int burningTime = 30; //Tv
+const int proAssistanceTime = 5; //Tfr 
+const int civAssistanceTime = 10; //Tzr
+
+const int targetFireDistance=2;
+
+const int droneLimitDecisionDistance=5;
+
+//const int timeLimit=200; not implemented
+const int randomness=1;
+/*
 //GRID
 const int Nrows = 10;
 const int Ncolumns = 8;
 
-
+const bool disableDrones=false;
 const int Ndrones = 2;
 const int Ncivilians = 4;
 const int Nprofessionals = 2;
@@ -71,12 +182,16 @@ const int burningTime = 8; //Tv
 const int proAssistanceTime = 2; //Tfr 
 const int civAssistanceTime = 3; //Tzr
 
+const int targetFireDistance=2;
 
+const int droneLimitDecisionDistance=4;
 
 //const int timeLimit=200; not implemented
-const int randomness=10;
+const int randomness=50;
 
 
+
+*/
 // ----- DECLARATIONS -----
 
 typedef struct
@@ -132,9 +247,10 @@ Professional_t professionals[Nprofessionals];
 
 int[0,Ncivilians] civInDanger=0;
 
-//CAN PROFESSIONALS DIE??
-int[0,Ncivilians] casualties;
-int[0,Ncivilians] survivors;
+int[0,Ncivilians] casualties=0;
+int[0,Ncivilians] survivors=0;
+int[0,100] survivorsPerc=0;
+int[0,100] casualtiesPerc=0;
 
 //Coordinates helpers
 int distance(Coordinates_t p1, Coordinates_t p2){
@@ -200,6 +316,15 @@ bool isCloseToExit(Coordinates_t point){
     return false;
 }
 
+void increaseCasualties(){
+    casualties++;
+    casualtiesPerc=fint((1.0*casualties/Ncivilians)*100);
+}
+
+void increaseSurvivors(){
+    survivors++;
+    survivorsPerc=fint((1.0*survivors/Ncivilians)*100);
+}
 
 
 
@@ -350,6 +475,74 @@ Coordinates_t moveToExit(Coordinates_t currentPos,Coordinates_t exitPos,int id){
     }
 }
 
+
+Coordinates_t moveToFire(Coordinates_t currentPos,Coordinates_t firePos,int id){
+     Coordinates_t move;
+     int row = currentPos.row;
+     int column = currentPos.column;
+     if(distance(currentPos,firePos)&lt;=targetFireDistance){
+        return randomMove(currentPos,id);
+     }
+
+     if(abs(currentPos.row-firePos.row) &gt; abs(currentPos.column-firePos.column)) {
+        //precedence to row movement
+        if(currentPos.row-firePos.row &gt; 0){
+            row--; 
+        }else{
+            row++;
+        }
+        if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+        }else{
+            row=currentPos.row;
+            if(currentPos.column-firePos.column &gt; 0){
+                column --;
+            }else{
+                column ++;
+            }
+            if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+            }else{
+                return randomMove(currentPos,id);
+            }
+        }
+
+    }else{
+        //precedence to column movement
+        if(currentPos.column-firePos.column &gt; 0){
+            column--; 
+        }else{
+            column++;
+        }
+        if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+        }else{
+            column=currentPos.column;
+            if(currentPos.row-firePos.row &gt; 0){
+                row --;
+            }else{
+                row ++;
+            }
+            if(isValidPosition(row,column)){
+                move.row=row;
+                move.column=column;
+                return move;
+            }else{
+                return randomMove(currentPos,id);
+            }
+
+
+        }
+
+    }
+}
+
 Coordinates_t getClosestExit(Coordinates_t pos){
     Coordinates_t min;
     int minDistance;
@@ -363,6 +556,26 @@ Coordinates_t getClosestExit(Coordinates_t pos){
         if(temp&lt;minDistance){
             minDistance=temp;
             min=initExits[i];
+        }      
+    }
+    
+    return min;
+
+}
+
+Coordinates_t getClosestFire(Coordinates_t pos){
+    Coordinates_t min;
+    int minDistance;
+    int temp;
+    int i;
+    min= initFires[0];//suppose at least an exit
+    minDistance = distance(pos,min);
+    
+    for( i=1; i&lt;Nexits-1; i++){
+        temp=distance(pos,initFires[i]);
+        if(temp&lt;minDistance){
+            minDistance=temp;
+            min=initFires[i];
         }      
     }
     
@@ -386,7 +599,8 @@ clock helpingTimer;
 void move(){
 
     Coordinates_t pos;
-    pos = randomMove(currentPos,id);
+    //pos = randomMove(currentPos,id);
+    pos = moveToFire(currentPos,getClosestFire(currentPos),id);
 
     grid[currentPos.row][currentPos.column].professional=-1;
     grid[pos.row][pos.column].professional=id;
@@ -440,7 +654,7 @@ void setRequestTime(){
 
 </declaration>
 		<location id="id0" x="-442" y="17">
-			<name x="-510" y="-17">canMove</name>
+			<name x="-518" y="-8">canMove</name>
 		</location>
 		<location id="id1" x="59" y="17">
 			<urgent/>
@@ -626,7 +840,7 @@ Coordinates_t moveVertically(Coordinates_t currPos){
 
 }
 
-//what happens if 2 drones occupy the same cell?
+
 void move(){
     Coordinates_t pos;
     pos = moveHorizontally(currentPos);
@@ -655,6 +869,9 @@ void clearDetectionData(){
 //busy civ?
 void detectCivInDanger(){
     int i;
+    if(disableDrones){
+        return;
+    }
     clearDetectionData();
     for(i=0;i&lt;Ncivilians;i++){
             if(distance(civilians[i].currentPosition,currentPos)&lt;= droneRadius){
@@ -719,7 +936,7 @@ void evaluateAction(){
 
         if(findPro&gt;=0){
             pro=findPro;
-            if(distance(professionals[pro].currentPosition,civilians[survivor].currentPosition)&lt;=4){
+            if(distance(professionals[pro].currentPosition,civilians[survivor].currentPosition)&lt;=droneLimitDecisionDistance){
                 action.professional=pro;
                 action.callProfessional=true;
             }
@@ -918,7 +1135,7 @@ void move(){
 void die(){
     Coordinates_t currentPos= getCurrPos();
     noHelpNeeded(id);
-    casualties++;
+    increaseCasualties();
     grid[currentPos.row][currentPos.column].civilian=-1;
     //finishTime=globalTime;
     resetCivilian();
@@ -926,7 +1143,7 @@ void die(){
 
 void escape(){
     Coordinates_t currentPos= getCurrPos();
-    survivors++;
+    increaseSurvivors();
     grid[currentPos.row][currentPos.column].civilian=-1;
     resetCivilian();
     //finishTime=globalTime;
@@ -1398,7 +1615,7 @@ system Controller,Drone,Civilian,Professional;
 			<formula>A[] not deadlock</formula>
 			<comment>check if there is any deadlock</comment>
 			<option key="--diagnostic" value="0"/>
-			<result outcome="success" type="quality" timestamp="2024-07-07 11:42:26 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-15 14:27:35 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
@@ -1440,7 +1657,21 @@ system Controller,Drone,Civilian,Professional;
 		</query>
 		<query>
 			<formula/>
+			<comment>MANDATORY PROPERTIES</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt;  globalTime&lt;=20 and survivorsPerc&gt;=50</formula>
 			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-07-15 15:43:20 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; globalTime&lt;=100 and survivorsPerc &gt;=50 </formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-07-15 18:09:15 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
 		</query>
 	</queries>
 </nta>
