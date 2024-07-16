@@ -14,7 +14,7 @@ const int Ncolumns = 20;
 const bool disableDrones=false;
 const int Ndrones = 2;
 const int Ncivilians = 12;
-const int Nprofessionals =4;
+const int Nprofessionals = 3;
  
 const int Nexits = 4;
 const int Nfires = 45;
@@ -48,7 +48,6 @@ const Coordinates_t initCivilians[Ncivilians] = {
 };
 
 const Coordinates_t initProfessionals[Nprofessionals] = {
-{3,5},
 {15,8},
 {16,13},
 {18,10}
