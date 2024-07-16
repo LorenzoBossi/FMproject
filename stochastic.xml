@@ -1761,11 +1761,8 @@ system Controller,Drone,Civilian,Professional;
 			<comment/>
 		</query>
 		<query>
-			<formula>Clock.moveTimer == 0 --&gt; Clock.moveTimer == 1</formula>
+			<formula>Controller.moveTimer == 0 --&gt; Controller.moveTimer == 1</formula>
 			<comment>check if there are zeno path</comment>
-			<result outcome="success" type="quality" timestamp="2024-06-17 14:45:15 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula>A[] not deadlock</formula>
@@ -1773,11 +1770,8 @@ system Controller,Drone,Civilian,Professional;
 			<option key="--diagnostic" value="0"/>
 		</query>
 		<query>
-			<formula>Clock.starting --&gt; Clock.finish</formula>
+			<formula>Controller.starting --&gt; Controller.finish</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-06-17 14:48:39 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula/>
