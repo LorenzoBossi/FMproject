@@ -114,6 +114,11 @@ const int civAssistanceTime = 10; //Tzr
 
 const int targetFireDistance=2;
 
+
+const bool droneMoveHorizontally=true;
+const bool droneMoveVertically=false;
+const bool droneMoveCircle=false;
+const int diameter=0;
 const int droneLimitDecisionDistance=5;
 
 //const int timeLimit=200; not implemented
@@ -184,6 +189,10 @@ const int civAssistanceTime = 3; //Tzr
 
 const int targetFireDistance=2;
 
+const bool droneMoveHorizontally=true;
+const bool droneMoveVertically=false;
+const bool droneMoveCircle=false;
+const int diameter=0;
 const int droneLimitDecisionDistance=4;
 
 //const int timeLimit=200; not implemented
@@ -772,7 +781,11 @@ professionals[id].isBusy=true</label>
 		<declaration>Coordinates_t currentPos;
 
 bool isGoingBack=false;
-
+int[0,3] direction=0;
+//0:right
+//1:down
+//2:left
+//3:up
 id_civ_t closeVictims[Ncivilians];
 id_civ_t closeSurvivors[Ncivilians];
 
@@ -840,10 +853,44 @@ Coordinates_t moveVertically(Coordinates_t currPos){
 
 }
 
+Coordinates_t moveCircle(Coordinates_t currPos){
+    Coordinates_t move;
+    move.row=currPos.row;
+    move.column=currPos.column;
+    if(direction==0){
+        //Right
+        move.column++;
+    }else if(direction==1){
+        //Down
+        move.row++;
+    }
+    else if(direction==2){
+        //Left
+        move.column--;
+    }else if(direction==3){
+        //Up
+        move.row--;
+    }
+
+    circleCounter++;
+    if(circleCounter==diameter){
+        direction=(direction+1) % 4;
+        circleCounter=0;
+    }
+
+    return move;
+
+}
 
 void move(){
     Coordinates_t pos;
-    pos = moveHorizontally(currentPos);
+    if(droneMoveHorizontally)
+        pos = moveHorizontally(currentPos);
+    else if(droneMoveVertically){
+        pos = moveVertically(currentPos);
+    }else{
+        pos = moveCircle(currentPos);
+    }
     grid[currentPos.row][currentPos.column].drone=-1;
     grid[pos.row][pos.column].drone=id;
     currentPos=pos;

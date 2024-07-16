@@ -1,0 +1,120 @@
+//BIG GRID SCENARIO
+
+
+//STOCHASTIC FEATURES
+//must be [0,1]
+const double pFail = 0.1;
+const double pListen= 0.8;
+
+//GRID
+const int Nrows = 20;
+const int Ncolumns = 20;
+
+const bool disableDrones=false;
+const int Ndrones = 2;
+const int Ncivilians = 11;
+const int Nprofessionals = 5;
+ 
+const int Nexits = 8;
+const int Nfires = 23;
+
+
+typedef int[0,Ncivilians-1] id_civ_t;
+typedef int[0,Nprofessionals-1] id_pro_t;
+typedef int[0,Ndrones-1] id_dro_t;
+typedef int[0,Nrows-1] row_t;
+typedef int[0,Ncolumns-1] col_t;
+
+typedef struct{
+    row_t row;
+    col_t column; 
+} Coordinates_t;
+
+
+const Coordinates_t initCivilians[Ncivilians] = {
+{5,5},
+{7,14},
+{8,2},
+{8,8},
+{9,11},
+{11,4},
+{11,12},
+{11,18},
+{12,9},
+{14,6},
+{15,10}
+};
+
+const Coordinates_t initProfessionals[Nprofessionals] = {
+{2,2},
+{2,17},
+{10,7},
+{13,19},
+{17,5}
+};
+
+const Coordinates_t initDrones[Ndrones] = {
+
+{4,15},
+{15,4}
+
+};
+
+//Fire cells must be contiguous!!!
+const Coordinates_t initFires[Nfires] = {
+{3,9},
+{3,10},
+{4,8},
+{4,9},
+{4,10},
+{4,11},
+{5,8},
+{5,9},
+{5,10},
+{5,11},
+{5,12},
+{6,9},
+{6,10},
+{6,11},
+{7,10},
+
+{17,14},
+{16,13},
+{16,14},
+{16,15},
+{15,14},
+{15,15},
+{15,16},
+{14,15}
+
+};
+
+//Exits must be on the boundary of the grid
+const Coordinates_t initExits[Nexits] = {
+{0,3},
+{0,4},
+{0,15},
+{0,16},
+{19,3},
+{19,4},
+{19,15},
+{19,16}
+};
+
+
+//Assistance
+
+const int droneRadius = 4; //Nv 
+const int burningTime = 30; //Tv
+const int proAssistanceTime = 5; //Tfr 
+const int civAssistanceTime = 10; //Tzr
+
+const int targetFireDistance=2;
+
+const bool droneMoveHorizontally=true;
+const bool droneMoveVertically=false;
+const bool droneMoveCircle=false;
+const int diameter=0;
+const int droneLimitDecisionDistance=5;
+
+const int randomness=1;

@@ -1,0 +1,99 @@
+//NARROW GRID SCENARIO
+
+
+//STOCHASTIC FEATURES
+//must be [0,1]
+const double pFail = 0.1;
+const double pListen= 0.8;
+
+//GRID
+
+const int Nrows = 4;
+const int Ncolumns = 20;
+
+const bool disableDrones=true;//have to decide where to put drones
+const int Ndrones = 1;
+const int Ncivilians = 11;
+const int Nprofessionals =4;
+ 
+const int Nexits = 4;
+const int Nfires = 8;
+
+
+typedef int[0,Ncivilians-1] id_civ_t;
+typedef int[0,Nprofessionals-1] id_pro_t;
+typedef int[0,Ndrones-1] id_dro_t;
+typedef int[0,Nrows-1] row_t;
+typedef int[0,Ncolumns-1] col_t;
+
+typedef struct{
+    row_t row;
+    col_t column; 
+} Coordinates_t;
+
+
+const Coordinates_t initCivilians[Ncivilians] = {
+{0,1},
+{0,3},
+{0,4},
+{1,3},
+{1,4},
+{1,5},
+{2,2},
+{2,4},
+{2,6},
+{3,4},
+{3,5}
+};
+
+const Coordinates_t initProfessionals[Nprofessionals] = {
+{0,18},
+{1,18},
+{2,18},
+{3,18}
+};
+
+const Coordinates_t initDrones[Ndrones] = {
+
+{1,1}
+
+};
+
+//Fire cells must be contiguous!!!
+const Coordinates_t initFires[Nfires] = {
+{0,0},
+{1,0},
+{1,1},
+{2,0},
+{2,1},
+{3,0},
+{3,1},
+{3,2}
+
+};
+
+//Exits must be on the boundary of the grid
+const Coordinates_t initExits[Nexits] = {
+{0,19},
+{1,19},
+{2,19},
+{3,19}
+};
+
+
+//Assistance
+
+const int droneRadius = 1; //Nv 
+const int burningTime = 30; //Tv
+const int proAssistanceTime = 5; //Tfr 
+const int civAssistanceTime = 10; //Tzr
+
+const int targetFireDistance=2;
+
+const bool droneMoveHorizontally=true;
+const bool droneMoveVertically=false;
+const bool droneMoveCircle=false;
+const int diameter=0;
+const int droneLimitDecisionDistance=5;
+
+const int randomness=1;
