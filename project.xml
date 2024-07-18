@@ -7,21 +7,21 @@
 
 
 //----- CONFIGURATIONS -----
-//NARROW GRID SCENARIO
+//TEST GRID SCENARIO
 
 
 //GRID
 
-const int Nrows = 4;
-const int Ncolumns = 20;
+const int Nrows = 10;
+const int Ncolumns = 10;
 
 const bool disableDrones=false;//have to decide where to put drones
 const int Ndrones = 2;
 const int Ncivilians = 11;
-const int Nprofessionals =4;
+const int Nprofessionals =3;
  
-const int Nexits = 4;
-const int Nfires = 8;
+const int Nexits = 2;
+const int Nfires = 7;
 
 
 typedef int[0,Ncivilians-1] id_civ_t;
@@ -37,58 +37,52 @@ typedef struct{
 
 
 const Coordinates_t initCivilians[Ncivilians] = {
-{0,1},
-{0,3},
-{0,4},
-{1,3},
-{1,4},
-{1,5},
-{2,2},
-{2,4},
-{2,6},
-{3,4},
-{3,5}
+{5,1},
+{4,4},
+{4,6},
+{4,7},
+{4,8},
+{5,6},
+{5,7},
+{5,8},
+{5,9},
+{6,7},
+{6,8}
 };
 
 const Coordinates_t initProfessionals[Nprofessionals] = {
-{0,18},
-{1,18},
-{2,18},
-{3,18}
+{2,7},
+{4,3},
+{4,5}
 };
 
 const Coordinates_t initDrones[Ndrones] = {
-
-{1,1},
-{2,18}
-
+{2,2},
+{3,2}
 };
 
 //Fire cells must be contiguous!!!
 const Coordinates_t initFires[Nfires] = {
-{0,0},
-{1,0},
-{1,1},
-{2,0},
-{2,1},
-{3,0},
-{3,1},
-{3,2}
+{3,3},
+{3,4},
+{3,5},
+{3,6},
+{3,7},
+{3,8},
+{3,9}
 
 };
 
 //Exits must be on the boundary of the grid
 const Coordinates_t initExits[Nexits] = {
-{0,19},
-{1,19},
-{2,19},
-{3,19}
+{0,2},
+{0,7}
 };
 
 
 //Assistance
 
-const int droneRadius = 5; //Nv 
+const int droneRadius = 3; //Nv 
 const int burningTime = 30; //Tv
 const int proAssistanceTime = 5; //Tfr 
 const int civAssistanceTime = 10; //Tzr
@@ -101,7 +95,7 @@ const bool droneMoveCircle=false;
 const int diameter=0;
 const int droneLimitDecisionDistance=3;
 
-const int randomness=1;
+const int randomness=30;
 // ----- DECLARATIONS -----
 
 typedef struct
@@ -147,7 +141,17 @@ chan helpRequest[Nprofessionals];
 //clocks
 clock globalTime;
 
-int[0,randomness-1] randomSeed;
+int pickRandomModulus(){
+    if(randomness&gt;=4){
+        return randomness;
+    }
+    else{
+        return 4;
+    }
+}
+const int randomModulus = pickRandomModulus();
+int[0,randomModulus] randomSeed;
+int randomTime=0;
 Cell_t grid[Nrows][Ncolumns];
 Civilian_t civilians[Ncivilians];
 Professional_t professionals[Nprofessionals];
@@ -261,6 +265,14 @@ bool isValidPosition(int row,int column){
         
 }
 
+
+
+void updateRandomSeed(int id){
+    int time = randomTime;
+    randomSeed=((randomSeed+id)^time) % randomModulus;
+    
+}
+
 //id used for randomness
 Coordinates_t randomMove(Coordinates_t currentPos, int id){
     bool validMove;
@@ -270,17 +282,17 @@ Coordinates_t randomMove(Coordinates_t currentPos, int id){
     int x,y;
     Coordinates_t move;
 
-    rand=(randomSeed ^ id) % 2;
+    rand= randomSeed % 2;
     if (rand == 0)
         inc = +1;
     else
         inc = -1;
 
-    randomSeed=(randomSeed+id) % randomness;
+    updateRandomSeed(id);
 
-    rand = (randomSeed ^ id) % 4;
+    rand = randomSeed % 4;
     
-    randomSeed=(randomSeed+id) % randomness;
+    updateRandomSeed(id);
     do{
         y=currentPos.row;
         x=currentPos.column;
@@ -320,6 +332,7 @@ Coordinates_t randomMove(Coordinates_t currentPos, int id){
     return move;
     
 }
+
 
 Coordinates_t moveToExit(Coordinates_t currentPos,Coordinates_t exitPos,int id){
      Coordinates_t move;
@@ -567,7 +580,7 @@ void setRequestTime(){
 			<name x="-518" y="-8">canMove</name>
 		</location>
 		<location id="id1" x="59" y="17">
-			<urgent/>
+			<committed/>
 		</location>
 		<location id="id2" x="-910" y="17">
 			<urgent/>
@@ -948,10 +961,10 @@ void updateDetectedList(){
 		</location>
 		<location id="id26" x="-280" y="-34">
 			<name x="-263" y="-42">takingAction</name>
-			<label kind="comments" x="34" y="-127">concrete simulation broken here</label>
 			<committed/>
 		</location>
 		<location id="id27" x="-280" y="51">
+			<name x="-263" y="42">actionNeeded</name>
 			<committed/>
 		</location>
 		<location id="id28" x="-280" y="340">
@@ -1114,7 +1127,6 @@ void sendInfoToPro(){
 			<name x="-493" y="-42">canMove</name>
 		</location>
 		<location id="id39" x="-510" y="-263">
-			<label kind="comments" x="-332" y="-246">close even in diagonal??</label>
 			<urgent/>
 		</location>
 		<location id="id40" x="102" y="-263">
@@ -1152,6 +1164,7 @@ void sendInfoToPro(){
 			<name x="-790" y="374">waitingPro</name>
 		</location>
 		<location id="id50" x="-144" y="297">
+			<name x="-187" y="314">otherCivDied</name>
 			<label kind="invariant" x="-238" y="254">helpingTimer&lt;=timeToHelp</label>
 		</location>
 		<init ref="id43"/>
@@ -1384,7 +1397,6 @@ bool finished(){
 			<urgent/>
 		</location>
 		<location id="id78" x="212" y="-306">
-			<label kind="comments" x="101" y="-578">CAN PROFESSIONALS DIE/ESCAPE?</label>
 			<urgent/>
 		</location>
 		<location id="id79" x="-161" y="-527">
@@ -1422,11 +1434,11 @@ bool finished(){
 		<transition id="id86">
 			<source ref="id74"/>
 			<target ref="id81"/>
-			<label kind="guard" x="-561" y="127">finished()</label>
-			<label kind="assignment" x="-561" y="144">initGrid(),
+			<label kind="guard" x="-561" y="110">finished()</label>
+			<label kind="assignment" x="-561" y="127">initGrid(),
 randomSeed=0,
-moveTimer=0</label>
-			<label kind="comments" x="-442" y="144">initGrid to reset everything for performance</label>
+moveTimer=0,
+randomTime=0</label>
 		</transition>
 		<transition id="id87">
 			<source ref="id80"/>
@@ -1502,9 +1514,10 @@ moveTimer=0</label>
 		<transition id="id98">
 			<source ref="id74"/>
 			<target ref="id70"/>
-			<label kind="guard" x="-552" y="-43">!finished() &amp;&amp; moveTimer==1</label>
-			<label kind="assignment" x="-552" y="-85">moveTimer=0,
-counter=0</label>
+			<label kind="guard" x="-552" y="-17">!finished() &amp;&amp; moveTimer==1</label>
+			<label kind="assignment" x="-552" y="-76">moveTimer=0,
+counter=0,
+randomTime++</label>
 		</transition>
 		<transition id="id99">
 			<source ref="id73"/>
@@ -1533,7 +1546,7 @@ counter=0</label>
 		<transition id="id103">
 			<source ref="id69"/>
 			<target ref="id80"/>
-			<label kind="select" x="-1147" y="25">randomN : int[0,randomness-1]</label>
+			<label kind="select" x="-1172" y="0">randomN : int[0,randomness-1]</label>
 			<label kind="assignment" x="-1071" y="59">initGrid(),
 globalTime=0,
 moveTimer=0,
@@ -1565,7 +1578,7 @@ system Controller,Drone,Civilian,Professional;
 			<formula>A[] not deadlock</formula>
 			<comment>check if there is any deadlock</comment>
 			<option key="--diagnostic" value="0"/>
-			<result outcome="success" type="quality" timestamp="2024-07-15 14:27:35 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 10:27:11 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
@@ -1583,28 +1596,25 @@ system Controller,Drone,Civilian,Professional;
 		<query>
 			<formula>E&lt;&gt; forall (i:id_civ_t) Civilian(i).safe</formula>
 			<comment/>
-			<result outcome="failure" type="quality" timestamp="2024-07-16 17:51:54 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).callPro</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-16 17:52:02 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 11:01:35 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).helpingCiv</formula>
 			<comment/>
-			<result outcome="failure" type="quality" timestamp="2024-07-16 17:52:13 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 11:02:26 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists(i:id_dro_t) Drone(i).actionNeeded</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-06-14 10:44:58 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 08:13:05 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>

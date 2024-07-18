@@ -1,0 +1,90 @@
+//----- CONFIGURATIONS -----
+//TEST GRID SCENARIO
+
+
+//GRID
+
+const int Nrows = 10;
+const int Ncolumns = 10;
+
+const bool disableDrones=false;//have to decide where to put drones
+const int Ndrones = 2;
+const int Ncivilians = 11;
+const int Nprofessionals =3;
+ 
+const int Nexits = 2;
+const int Nfires = 7;
+
+
+typedef int[0,Ncivilians-1] id_civ_t;
+typedef int[0,Nprofessionals-1] id_pro_t;
+typedef int[0,Ndrones-1] id_dro_t;
+typedef int[0,Nrows-1] row_t;
+typedef int[0,Ncolumns-1] col_t;
+
+typedef struct{
+    row_t row;
+    col_t column; 
+} Coordinates_t;
+
+
+const Coordinates_t initCivilians[Ncivilians] = {
+{5,1},
+{4,4},
+{4,6},
+{4,7},
+{4,8},
+{5,6},
+{5,7},
+{5,8},
+{5,9},
+{6,7},
+{6,8}
+};
+
+const Coordinates_t initProfessionals[Nprofessionals] = {
+{2,7},
+{4,3},
+{4,5}
+};
+
+const Coordinates_t initDrones[Ndrones] = {
+{2,2},
+{3,2}
+};
+
+//Fire cells must be contiguous!!!
+const Coordinates_t initFires[Nfires] = {
+{3,3},
+{3,4},
+{3,5},
+{3,6},
+{3,7},
+{3,8},
+{3,9}
+
+};
+
+//Exits must be on the boundary of the grid
+const Coordinates_t initExits[Nexits] = {
+{0,2},
+{0,7}
+};
+
+
+//Assistance
+
+const int droneRadius = 3; //Nv 
+const int burningTime = 30; //Tv
+const int proAssistanceTime = 5; //Tfr 
+const int civAssistanceTime = 10; //Tzr
+
+const int targetFireDistance=2;
+
+const bool droneMoveHorizontally=true;
+const bool droneMoveVertically=false;
+const bool droneMoveCircle=false;
+const int diameter=0;
+const int droneLimitDecisionDistance=2;
+
+const int randomness=2;

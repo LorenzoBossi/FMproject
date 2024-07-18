@@ -263,7 +263,18 @@ broadcast chan helpRequest[Nprofessionals];
 //clocks
 clock globalTime;
 
-int[0,randomness-1] randomSeed;
+
+int pickRandomModulus(){
+    if(randomness&gt;=4){
+        return randomness;
+    }
+    else{
+        return 4;
+    }
+}
+const int randomModulus=pickRandomModulus();
+int[0,randomModulus] randomSeed;
+int randomTime=0;
 Cell_t grid[Nrows][Ncolumns];
 Civilian_t civilians[Ncivilians];
 Professional_t professionals[Nprofessionals];
@@ -383,6 +394,12 @@ bool isValidPosition(int row,int column){
         
 }
 
+void updateRandomSeed(int id){
+    int time = randomTime;
+    randomSeed=((randomSeed+id)^time) % randomModulus;
+    
+}
+
 //id used for randomness
 Coordinates_t randomMove(Coordinates_t currentPos, int id){
     bool validMove;
@@ -392,17 +409,17 @@ Coordinates_t randomMove(Coordinates_t currentPos, int id){
     int x,y;
     Coordinates_t move;
 
-    rand=(randomSeed ^ id) % 2;
+    rand = randomSeed % 2;
     if (rand == 0)
         inc = +1;
     else
         inc = -1;
 
-    randomSeed=(randomSeed+id) % randomness;
+    updateRandomSeed(id);
 
-    rand = (randomSeed ^ id) % 4;
+    rand = randomSeed % 4;
     
-    randomSeed=(randomSeed+id) % randomness;
+    updateRandomSeed(id);
     do{
         y=currentPos.row;
         x=currentPos.column;
@@ -442,6 +459,8 @@ Coordinates_t randomMove(Coordinates_t currentPos, int id){
     return move;
     
 }
+
+
 
 Coordinates_t moveToExit(Coordinates_t currentPos,Coordinates_t exitPos,int id){
      Coordinates_t move;
@@ -688,7 +707,7 @@ void setRequestTime(){
 			<name x="-510" y="-17">canMove</name>
 		</location>
 		<location id="id1" x="59" y="17">
-			<urgent/>
+			<committed/>
 		</location>
 		<location id="id2" x="-910" y="17">
 			<urgent/>
@@ -1079,6 +1098,7 @@ void updateDetectedList(){
 			<committed/>
 		</location>
 		<location id="id27" x="-229" y="51">
+			<name x="-212" y="42">actionNeeded</name>
 			<committed/>
 		</location>
 		<location id="id28" x="-229" y="340">
@@ -1267,7 +1287,6 @@ void sendInfoToPro(){
 			<name x="-544" y="-51">canMove</name>
 		</location>
 		<location id="id44" x="-561" y="-263">
-			<label kind="comments" x="-383" y="-246">close even in diagonal??</label>
 			<urgent/>
 		</location>
 		<location id="id45" x="136" y="-263">
@@ -1276,9 +1295,6 @@ void sendInfoToPro(){
 		<location id="id46" x="-561" y="-739">
 			<name x="-653" y="-756">burning</name>
 			<label kind="invariant" x="-789" y="-739">burningTimer&lt;=burningTime</label>
-			<label kind="comments" x="-670" y="-824">readyToHelp[id] maybe not needed,
-
-removed moveCivilian</label>
 		</location>
 		<location id="id47" x="561" y="-263">
 			<name x="551" y="-297">safe</name>
@@ -1314,6 +1330,7 @@ removed moveCivilian</label>
 			<committed/>
 		</location>
 		<location id="id57" x="-119" y="450">
+			<name x="-170" y="416">otherCivDied</name>
 			<label kind="invariant" x="-204" y="467">helpingTimer&lt;=timeToHelp</label>
 		</location>
 		<branchpoint id="id58" x="-331" y="85"/>
@@ -1586,7 +1603,6 @@ bool finished(){
 			<urgent/>
 		</location>
 		<location id="id93" x="212" y="-306">
-			<label kind="comments" x="101" y="-578">CAN PROFESSIONALS DIE/ESCAPE?</label>
 			<urgent/>
 		</location>
 		<location id="id94" x="-161" y="-527">
@@ -1627,8 +1643,8 @@ bool finished(){
 			<label kind="guard" x="-561" y="127">finished()</label>
 			<label kind="assignment" x="-561" y="144">initGrid(),
 randomSeed=0,
-moveTimer=0</label>
-			<label kind="comments" x="-442" y="144">initGrid to reset everything for performance</label>
+moveTimer=0,
+randomTime=0</label>
 		</transition>
 		<transition id="id102">
 			<source ref="id95"/>
@@ -1708,9 +1724,10 @@ readyToDetect[counter]</label>
 		<transition id="id113">
 			<source ref="id89"/>
 			<target ref="id85"/>
-			<label kind="guard" x="-552" y="-43">!finished() &amp;&amp; moveTimer==1</label>
+			<label kind="guard" x="-552" y="-25">!finished() &amp;&amp; moveTimer==1</label>
 			<label kind="assignment" x="-552" y="-85">moveTimer=0,
-counter=0</label>
+counter=0,
+randomTime++</label>
 		</transition>
 		<transition id="id114">
 			<source ref="id88"/>
@@ -1798,14 +1815,14 @@ system Controller,Drone,Civilian,Professional;
 		<query>
 			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).helpingCiv</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-06-14 11:03:40 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 10:11:52 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists(i:id_dro_t) Drone(i).actionNeeded</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-06-14 10:44:58 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 10:03:31 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
