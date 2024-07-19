@@ -321,41 +321,71 @@ void noHelpNeeded(id_civ_t idCivilian){
 }
 
 
-//even in diagonal?
+
 bool isCloseToFire(Coordinates_t point){
     int x,y;
     if(grid[point.row][point.column].onFire)
         return true;
-    for(i : int[-1,1]){
-        for(j: int[-1,1]){
-            x= point.row+i;
-            y= point.column+j;
-            if(x&gt;=0 &amp;&amp; x&lt; Nrows  &amp;&amp;  y&gt;=0 &amp;&amp; y&lt;Ncolumns){
-                if(grid[x][y].onFire)
-                    return true;
-            }
-
-        }
+    
+    x= point.row+1;
+    y= point.column;
+    if(x&lt; Nrows){
+        if(grid[x][y].onFire)
+            return true;      
     }
+    x= point.row-1;
+    y= point.column;
+    if(x&gt;=0){
+        if(grid[x][y].onFire)
+            return true;      
+    }
+    x= point.row;
+    y= point.column+1;
+    if(y&lt;Ncolumns){
+        if(grid[x][y].onFire)
+            return true;     
+    }
+    x= point.row;
+    y= point.column-1;
+    if(y&gt;=0){
+        if(grid[x][y].onFire)
+            return true;       
+    }
+       
     return false;
 }
 
-//even in diagonal?
+
 bool isCloseToExit(Coordinates_t point){
     int x,y;
     if(grid[point.row][point.column].isExit)
         return true;
-    for(i : int[-1,1]){
-        for(j: int[-1,1]){
-            x= point.row+i;
-            y= point.column+j;
-            if(x&gt;=0 &amp;&amp; x&lt; Nrows  &amp;&amp;  y&gt;=0 &amp;&amp; y&lt;Ncolumns){
-                if(grid[x][y].isExit)
-                    return true;
-            }
-
-        }
+    
+    x= point.row+1;
+    y= point.column;
+    if(x&lt; Nrows){
+        if(grid[x][y].isExit)
+            return true;      
     }
+    x= point.row-1;
+    y= point.column;
+    if(x&gt;=0){
+        if(grid[x][y].isExit)
+            return true;       
+    }
+    x= point.row;
+    y= point.column+1;
+    if(y&lt;Ncolumns){
+        if(grid[x][y].isExit)
+            return true;       
+    }
+    x= point.row;
+    y= point.column-1;
+    if(y&gt;=0){
+        if(grid[x][y].isExit)
+            return true;
+    }
+       
     return false;
 }
 
@@ -640,17 +670,28 @@ Coordinates_t getClosestFire(Coordinates_t pos){
 	<template>
 		<name>Professional</name>
 		<parameter>const id_pro_t id</parameter>
-		<declaration>Coordinates_t currentPos;
+		<declaration>
 id_civ_t civToHelp=0;
 int timeToSave=0;
 
 clock helpingTimer;
 
 
+
+void setCurrPos(Coordinates_t pos){
+    professionals[id].currentPosition.row = pos.row;
+    professionals[id].currentPosition.column = pos.column;
+}
+Coordinates_t getCurrPos(){
+    return professionals[id].currentPosition;
+}
+
+
 void move(){
 
-    Coordinates_t pos;
-    pos = randomMove(currentPos,id);
+    Coordinates_t pos,currentPos=getCurrPos();
+    //pos = randomMove(currentPos,id);
+    pos = moveToFire(currentPos,getClosestFire(currentPos),id);
 
     grid[currentPos.row][currentPos.column].professional=-1;
     grid[pos.row][pos.column].professional=id;
@@ -661,7 +702,7 @@ bool someoneNearToHelp(){
     int i;
     for(i=0;i&lt;Ncivilians;i++){
         if(civilians[i].isInDanger  &amp;&amp; !civilians[i].isBusy &amp;&amp; civilians[i].isOnTheGrid){
-            if(distance(currentPos, civilians[i].currentPosition)&lt;=1){
+            if(distance(getCurrPos(), civilians[i].currentPosition)&lt;=1){
                 return true;
             }
         }
@@ -673,7 +714,7 @@ void chooseCivToHelp(){
     int i,distanceToCiv;
     for(i=0;i&lt;Ncivilians;i++){
         if(civilians[i].isInDanger &amp;&amp; !civilians[i].isBusy &amp;&amp; civilians[i].isOnTheGrid){
-            distanceToCiv=distance(currentPos, civilians[i].currentPosition);
+            distanceToCiv=distance(getCurrPos(), civilians[i].currentPosition);
             if(distanceToCiv &lt;=1){
                 civToHelp=i;
                 timeToSave=distanceToCiv + proAssistanceTime;
@@ -697,9 +738,10 @@ id_civ_t getVictimToSave(){
 void setRequestTime(){
     id_civ_t caller = getCaller();
     id_civ_t victimToSave= getVictimToSave();
-    timeToSave = distance(civilians[caller].currentPosition,currentPos)+distance(currentPos,civilians[victimToSave].currentPosition)+proAssistanceTime;
+    timeToSave = distance(civilians[caller].currentPosition,getCurrPos())+distance(getCurrPos(),civilians[victimToSave].currentPosition)+proAssistanceTime;
     
 }
+
 
 
 </declaration>
@@ -803,7 +845,7 @@ readyToMovePro[id]=true</label>
 			<source ref="id2"/>
 			<target ref="id0"/>
 			<label kind="synchronisation" x="-791" y="-8">start?</label>
-			<label kind="assignment" x="-851" y="25">currentPos=initProfessionals[id],
+			<label kind="assignment" x="-851" y="25">setCurrPos(initProfessionals[id]),
 readyToMovePro[id]=true</label>
 		</transition>
 		<transition id="id20">
@@ -954,7 +996,7 @@ void clearDetectionData(){
         closeVictims[i]=emptyCiv;
     }
     for(i=0; i&lt;survivorsDetected; i++){
-        closeVictims[i]=emptyCiv;
+        closeSurvivors[i]=emptyCiv;
     }
     victimsDetected=0;
     survivorsDetected=0;

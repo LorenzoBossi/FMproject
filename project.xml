@@ -6,22 +6,29 @@
 
 
 
-//----- CONFIGURATIONS -----
-//TEST GRID SCENARIO
 
+//----- CONFIGURATIONS -----
+
+
+//BIG GRID SCENARIO
+
+
+//STOCHASTIC FEATURES
+//must be [0,1]
+const double pFail = 0.1;
+const double pListen= 0.8;
 
 //GRID
+const int Nrows = 20;
+const int Ncolumns = 20;
 
-const int Nrows = 10;
-const int Ncolumns = 10;
-
-const bool disableDrones=false;//have to decide where to put drones
+const bool disableDrones=false;
 const int Ndrones = 2;
-const int Ncivilians = 11;
-const int Nprofessionals =3;
+const int Ncivilians = 15;
+const int Nprofessionals = 5;
  
-const int Nexits = 2;
-const int Nfires = 7;
+const int Nexits = 8;
+const int Nfires = 46;
 
 
 typedef int[0,Ncivilians-1] id_civ_t;
@@ -37,53 +44,118 @@ typedef struct{
 
 
 const Coordinates_t initCivilians[Ncivilians] = {
-{5,1},
-{4,4},
-{4,6},
-{4,7},
-{4,8},
-{5,6},
-{5,7},
-{5,8},
-{5,9},
-{6,7},
-{6,8}
+{4,11},
+{5,3},
+{5,15},
+{6,5},
+{7,2},
+{7,13},
+{8,16},
+{9,4},
+{10,13},
+{11,2},
+{11,17},
+{12,5},
+{14,3},
+{15,7},
+{17,10}
 };
 
 const Coordinates_t initProfessionals[Nprofessionals] = {
-{2,7},
-{4,3},
-{4,5}
+{3,2},
+{5,13},
+{10,18},
+{12,1},
+{17,6}
 };
 
 const Coordinates_t initDrones[Ndrones] = {
-{2,2},
-{3,2}
+
+{5,15},
+{14,4}
+
 };
 
-//Fire cells must be contiguous!!!
+
 const Coordinates_t initFires[Nfires] = {
-{3,3},
-{3,4},
 {3,5},
 {3,6},
-{3,7},
-{3,8},
-{3,9}
 
+{4,6},
+{4,7},
+{4,8},
+
+{5,7},
+{5,8},
+
+{6,7},
+{6,8},
+{6,9},
+
+{7,8},
+{7,9},
+{7,10},
+
+{8,7},
+{8,8},
+{8,9},
+
+{9,6},
+{9,7},
+{9,8},
+
+{10,7},
+{10,8},
+{10,9},
+{10,10},
+
+{11,8},
+{11,9},
+{11,10},
+
+{12,9},
+
+{13,9},
+{13,10},
+{13,12},
+{13,13},
+{13,14},
+{13,15},
+
+{14,10},
+{14,11},
+{14,12},
+{14,13},
+{14,14},
+{14,15},
+{14,16},
+
+{15,11},
+{15,12},
+{15,15},
+{15,16},
+{15,17},
+
+{16,17}
 };
 
 //Exits must be on the boundary of the grid
 const Coordinates_t initExits[Nexits] = {
-{0,2},
-{0,7}
+{0,3},
+{0,4},
+{0,15},
+{0,16},
+{19,3},
+{19,4},
+{19,15},
+{19,16}
 };
 
 
 //Assistance
 
-const int droneRadius = 3; //Nv 
-const int burningTime = 30; //Tv
+const int droneRadius = 4; //Nv 
+const int burningTime = 22; //Tv
 const int proAssistanceTime = 5; //Tfr 
 const int civAssistanceTime = 10; //Tzr
 
@@ -93,9 +165,12 @@ const bool droneMoveHorizontally=true;
 const bool droneMoveVertically=false;
 const bool droneMoveCircle=false;
 const int diameter=0;
-const int droneLimitDecisionDistance=3;
+const int droneLimitDecisionDistance=5;
 
-const int randomness=30;
+const int randomness=100;
+
+
+
 // ----- DECLARATIONS -----
 
 typedef struct
@@ -192,41 +267,70 @@ void noHelpNeeded(id_civ_t idCivilian){
 }
 
 
-//even in diagonal?
 bool isCloseToFire(Coordinates_t point){
     int x,y;
     if(grid[point.row][point.column].onFire)
         return true;
-    for(i : int[-1,1]){
-        for(j: int[-1,1]){
-            x= point.row+i;
-            y= point.column+j;
-            if(x&gt;=0 &amp;&amp; x&lt; Nrows  &amp;&amp;  y&gt;=0 &amp;&amp; y&lt;Ncolumns){
-                if(grid[x][y].onFire)
-                    return true;
-            }
-
-        }
+    
+    x= point.row+1;
+    y= point.column;
+    if(x&lt; Nrows){
+        if(grid[x][y].onFire)
+            return true;      
     }
+    x= point.row-1;
+    y= point.column;
+    if(x&gt;=0){
+        if(grid[x][y].onFire)
+            return true;      
+    }
+    x= point.row;
+    y= point.column+1;
+    if(y&lt;Ncolumns){
+        if(grid[x][y].onFire)
+            return true;     
+    }
+    x= point.row;
+    y= point.column-1;
+    if(y&gt;=0){
+        if(grid[x][y].onFire)
+            return true;       
+    }
+       
     return false;
 }
 
-//even in diagonal?
+
 bool isCloseToExit(Coordinates_t point){
     int x,y;
     if(grid[point.row][point.column].isExit)
         return true;
-    for(i : int[-1,1]){
-        for(j: int[-1,1]){
-            x= point.row+i;
-            y= point.column+j;
-            if(x&gt;=0 &amp;&amp; x&lt; Nrows  &amp;&amp;  y&gt;=0 &amp;&amp; y&lt;Ncolumns){
-                if(grid[x][y].isExit)
-                    return true;
-            }
-
-        }
+    
+    x= point.row+1;
+    y= point.column;
+    if(x&lt; Nrows){
+        if(grid[x][y].isExit)
+            return true;      
     }
+    x= point.row-1;
+    y= point.column;
+    if(x&gt;=0){
+        if(grid[x][y].isExit)
+            return true;       
+    }
+    x= point.row;
+    y= point.column+1;
+    if(y&lt;Ncolumns){
+        if(grid[x][y].isExit)
+            return true;       
+    }
+    x= point.row;
+    y= point.column-1;
+    if(y&gt;=0){
+        if(grid[x][y].isExit)
+            return true;
+    }
+       
     return false;
 }
 
@@ -512,29 +616,39 @@ Coordinates_t getClosestFire(Coordinates_t pos){
 	<template>
 		<name>Professional</name>
 		<parameter>const id_pro_t id</parameter>
-		<declaration>Coordinates_t currentPos;
+		<declaration>
 id_civ_t civToHelp=0;
 int timeToSave=0;
 
 clock helpingTimer;
 
 
+
+void setCurrPos(Coordinates_t pos){
+    professionals[id].currentPosition.row = pos.row;
+    professionals[id].currentPosition.column = pos.column;
+}
+Coordinates_t getCurrPos(){
+    return professionals[id].currentPosition;
+}
+
+
 void move(){
 
-    Coordinates_t pos;
+    Coordinates_t pos,currentPos=getCurrPos();
     //pos = randomMove(currentPos,id);
     pos = moveToFire(currentPos,getClosestFire(currentPos),id);
 
     grid[currentPos.row][currentPos.column].professional=-1;
     grid[pos.row][pos.column].professional=id;
-    currentPos=pos;
+    setCurrPos(pos);
 }
 
 bool someoneNearToHelp(){
     int i;
     for(i=0;i&lt;Ncivilians;i++){
         if(civilians[i].isInDanger  &amp;&amp; !civilians[i].isBusy &amp;&amp; civilians[i].isOnTheGrid){
-            if(distance(currentPos, civilians[i].currentPosition)&lt;=1){
+            if(distance(getCurrPos(), civilians[i].currentPosition)&lt;=1){
                 return true;
             }
         }
@@ -546,7 +660,7 @@ void chooseCivToHelp(){
     int i,distanceToCiv;
     for(i=0;i&lt;Ncivilians;i++){
         if(civilians[i].isInDanger &amp;&amp; !civilians[i].isBusy &amp;&amp; civilians[i].isOnTheGrid){
-            distanceToCiv=distance(currentPos, civilians[i].currentPosition);
+            distanceToCiv=distance(getCurrPos(), civilians[i].currentPosition);
             if(distanceToCiv &lt;=1){
                 civToHelp=i;
                 timeToSave=distanceToCiv + proAssistanceTime;
@@ -570,9 +684,10 @@ id_civ_t getVictimToSave(){
 void setRequestTime(){
     id_civ_t caller = getCaller();
     id_civ_t victimToSave= getVictimToSave();
-    timeToSave = distance(civilians[caller].currentPosition,currentPos)+distance(currentPos,civilians[victimToSave].currentPosition)+proAssistanceTime;
+    timeToSave = distance(civilians[caller].currentPosition,getCurrPos())+distance(getCurrPos(),civilians[victimToSave].currentPosition)+proAssistanceTime;
     
 }
+
 
 
 </declaration>
@@ -599,10 +714,10 @@ void setRequestTime(){
 			<label kind="invariant" x="-204" y="-578">helpingTimer &lt;= timeToSave</label>
 		</location>
 		<location id="id7" x="-442" y="-255">
-			<urgent/>
+			<committed/>
 		</location>
 		<location id="id8" x="-782" y="-348">
-			<urgent/>
+			<committed/>
 		</location>
 		<init ref="id2"/>
 		<transition id="id9">
@@ -672,7 +787,7 @@ professionals[id].isBusy=true</label>
 			<source ref="id2"/>
 			<target ref="id0"/>
 			<label kind="synchronisation" x="-791" y="-8">start?</label>
-			<label kind="assignment" x="-851" y="25">currentPos=initProfessionals[id]</label>
+			<label kind="assignment" x="-851" y="25">setCurrPos(initProfessionals[id])</label>
 		</transition>
 		<transition id="id20">
 			<source ref="id1"/>
@@ -788,7 +903,7 @@ Coordinates_t moveCircle(Coordinates_t currPos){
     }
 
     circleCounter++;
-    if(circleCounter==diameter){
+    if(circleCounter==diameter-1){
         direction=(direction+1) % 4;
         circleCounter=0;
     }
@@ -819,7 +934,7 @@ void clearDetectionData(){
         closeVictims[i]=emptyCiv;
     }
     for(i=0; i&lt;survivorsDetected; i++){
-        closeVictims[i]=emptyCiv;
+        closeSurvivors[i]=emptyCiv;
     }
     victimsDetected=0;
     survivorsDetected=0;
@@ -828,7 +943,7 @@ void clearDetectionData(){
 }
 
 
-//busy civ?
+
 void detectCivInDanger(){
     int i;
     if(disableDrones){
@@ -1127,10 +1242,10 @@ void sendInfoToPro(){
 			<name x="-493" y="-42">canMove</name>
 		</location>
 		<location id="id39" x="-510" y="-263">
-			<urgent/>
+			<committed/>
 		</location>
 		<location id="id40" x="102" y="-263">
-			<urgent/>
+			<committed/>
 		</location>
 		<location id="id41" x="-511" y="-739">
 			<name x="-603" y="-756">burning</name>
@@ -1331,6 +1446,7 @@ void initGrid(){
         {
             Coordinates_t civilian = initCivilians[i];
             grid[civilian.row][civilian.column].civilian = i;
+            civilians[i].currentPosition=civilian;
         }
 
     //init professionals
@@ -1338,6 +1454,7 @@ void initGrid(){
         {
             Coordinates_t professional = initProfessionals[i];
             grid[professional.row][professional.column].professional = i;
+            professionals[i].currentPosition=professional;
         }
 
     //init drones
@@ -1349,6 +1466,28 @@ void initGrid(){
 
 }
 
+void clearData(){
+    randomSeed=0;
+    moveTimer=0;
+    randomTime=0;
+    for (i : id_pro_t)
+        {
+            
+            professionals[i].isBusy=false;
+            professionals[i].caller=0;
+            professionals[i].victimToSave=0;
+        }
+    
+    for (i : id_civ_t)
+        {
+           
+            civilians[i].isInDanger=false;
+            civilians[i].isBusy=false;
+            civilians[i].isOnTheGrid=false;
+            civilians[i].civToHelp=0;
+            civilians[i].proToCall=0;
+        }
+}
 bool canCivMove(id_civ_t id){
     return civilians[id].isOnTheGrid &amp;&amp; !civilians[id].isBusy &amp;&amp; !civilians[id].isInDanger;
 }
@@ -1434,11 +1573,9 @@ bool finished(){
 		<transition id="id86">
 			<source ref="id74"/>
 			<target ref="id81"/>
-			<label kind="guard" x="-561" y="110">finished()</label>
-			<label kind="assignment" x="-561" y="127">initGrid(),
-randomSeed=0,
-moveTimer=0,
-randomTime=0</label>
+			<label kind="guard" x="-552" y="127">finished()</label>
+			<label kind="assignment" x="-552" y="144">initGrid(),
+clearData()</label>
 		</transition>
 		<transition id="id87">
 			<source ref="id80"/>
@@ -1578,43 +1715,40 @@ system Controller,Drone,Civilian,Professional;
 			<formula>A[] not deadlock</formula>
 			<comment>check if there is any deadlock</comment>
 			<option key="--diagnostic" value="0"/>
-			<result outcome="success" type="quality" timestamp="2024-07-18 10:27:11 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-18 15:15:29 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
 			<formula>Controller.starting --&gt; Controller.finish</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-16 17:11:47 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula/>
 			<comment/>
 		</query>
 		<query>
-			<formula>E&lt;&gt; forall (i:id_civ_t) Civilian(i).safe</formula>
+			<formula>E&lt;&gt; (forall (i:id_civ_t) Civilian(i).safe)</formula>
 			<comment/>
-		</query>
-		<query>
-			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).callPro</formula>
-			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-18 11:01:35 +0200">
+			<result outcome="failure" type="quality" timestamp="2024-07-19 12:23:34 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
+			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).callPro</formula>
+			<comment/>
+		</query>
+		<query>
 			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).helpingCiv</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-18 11:02:26 +0200">
+			<result outcome="failure" type="quality" timestamp="2024-07-18 11:43:33 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists(i:id_dro_t) Drone(i).actionNeeded</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-18 08:13:05 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-19 12:00:59 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
@@ -1627,16 +1761,16 @@ system Controller,Drone,Civilian,Professional;
 			<comment>MANDATORY PROPERTIES</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt;  globalTime&lt;=20 and survivorsPerc&gt;=50</formula>
+			<formula>E&lt;&gt; globalTime&lt;=50 and survivorsPerc&gt;=80</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-15 15:43:20 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-19 15:45:03 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
-			<formula>A&lt;&gt; globalTime&lt;=100 and survivorsPerc &gt;=50 </formula>
+			<formula>A&lt;&gt; globalTime&lt;=50 and survivorsPerc &gt;=60</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-15 18:09:15 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-19 16:00:59 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>

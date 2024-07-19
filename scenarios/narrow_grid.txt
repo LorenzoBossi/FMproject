@@ -1,3 +1,7 @@
+
+
+
+//----- CONFIGURATIONS -----
 //NARROW GRID SCENARIO
 
 
@@ -11,7 +15,7 @@ const double pListen= 0.8;
 const int Nrows = 4;
 const int Ncolumns = 20;
 
-const bool disableDrones=true;//have to decide where to put drones
+const bool disableDrones=false;
 const int Ndrones = 1;
 const int Ncivilians = 11;
 const int Nprofessionals =4;
@@ -55,7 +59,7 @@ const Coordinates_t initProfessionals[Nprofessionals] = {
 
 const Coordinates_t initDrones[Ndrones] = {
 
-{1,1}
+{0,2}
 
 };
 
@@ -83,17 +87,17 @@ const Coordinates_t initExits[Nexits] = {
 
 //Assistance
 
-const int droneRadius = 1; //Nv 
-const int burningTime = 30; //Tv
+const int droneRadius = 2; //Nv 
+const int burningTime = 20; //Tv
 const int proAssistanceTime = 5; //Tfr 
 const int civAssistanceTime = 10; //Tzr
 
 const int targetFireDistance=2;
 
-const bool droneMoveHorizontally=true;
+const bool droneMoveHorizontally=false;
 const bool droneMoveVertically=false;
-const bool droneMoveCircle=false;
-const int diameter=0;
-const int droneLimitDecisionDistance=5;
+const bool droneMoveCircle=true;
+const int diameter=4;
+const int droneLimitDecisionDistance=3;
 
-const int randomness=1;
+const int randomness=1000;
