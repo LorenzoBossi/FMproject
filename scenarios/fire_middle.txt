@@ -1,10 +1,9 @@
-
 //FIRE IN THE MIDDLE
 
 //STOCHASTIC FEATURES
 //must be [0,1]
 const double pFail = 0.1;
-const double pListen= 0.8;
+const double pListen= 0.9;
 
 //GRID
 
@@ -136,4 +135,3 @@ const int diameter=4;
 const int droneLimitDecisionDistance=4;
 
 const int randomness=200;
-

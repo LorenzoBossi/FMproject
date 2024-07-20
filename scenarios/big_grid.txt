@@ -4,7 +4,7 @@
 //STOCHASTIC FEATURES
 //must be [0,1]
 const double pFail = 0.1;
-const double pListen= 0.8;
+const double pListen= 0.9;
 
 //GRID
 const int Nrows = 20;
@@ -103,7 +103,7 @@ const Coordinates_t initFires[Nfires] = {
 
 {12,9},
 
-{13,9}
+{13,9},
 {13,10},
 {13,12},
 {13,13},
@@ -155,4 +155,4 @@ const bool droneMoveCircle=false;
 const int diameter=0;
 const int droneLimitDecisionDistance=5;
 
-const int randomness=1;
+const int randomness=100;

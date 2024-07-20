@@ -7,28 +7,29 @@
 
 
 
-//----- CONFIGURATIONS -----
+//------ CONFIGURATIONS ------
 
 
-//BIG GRID SCENARIO
+//NARROW GRID SCENARIO
 
 
 //STOCHASTIC FEATURES
 //must be [0,1]
 const double pFail = 0.1;
-const double pListen= 0.8;
+const double pListen=0.9;
 
 //GRID
-const int Nrows = 20;
+
+const int Nrows = 4;
 const int Ncolumns = 20;
 
 const bool disableDrones=false;
-const int Ndrones = 2;
-const int Ncivilians = 15;
-const int Nprofessionals = 5;
+const int Ndrones = 1;
+const int Ncivilians = 11;
+const int Nprofessionals =4;
  
-const int Nexits = 8;
-const int Nfires = 46;
+const int Nexits = 4;
+const int Nfires = 8;
 
 
 typedef int[0,Ncivilians-1] id_civ_t;
@@ -44,130 +45,84 @@ typedef struct{
 
 
 const Coordinates_t initCivilians[Ncivilians] = {
-{4,11},
-{5,3},
-{5,15},
-{6,5},
-{7,2},
-{7,13},
-{8,16},
-{9,4},
-{10,13},
-{11,2},
-{11,17},
-{12,5},
-{14,3},
-{15,7},
-{17,10}
+{0,1},
+{0,3},
+{0,4},
+{1,3},
+{1,4},
+{1,5},
+{2,2},
+{2,4},
+{2,6},
+{3,4},
+{3,5}
 };
 
 const Coordinates_t initProfessionals[Nprofessionals] = {
-{3,2},
-{5,13},
-{10,18},
-{12,1},
-{17,6}
+{0,18},
+{1,18},
+{2,18},
+{3,18}
 };
 
 const Coordinates_t initDrones[Ndrones] = {
 
-{5,15},
-{14,4}
+{0,2}
 
 };
 
-
+//Fire cells must be contiguous
 const Coordinates_t initFires[Nfires] = {
-{3,5},
-{3,6},
+{0,0},
+{1,0},
+{1,1},
+{2,0},
+{2,1},
+{3,0},
+{3,1},
+{3,2}
 
-{4,6},
-{4,7},
-{4,8},
-
-{5,7},
-{5,8},
-
-{6,7},
-{6,8},
-{6,9},
-
-{7,8},
-{7,9},
-{7,10},
-
-{8,7},
-{8,8},
-{8,9},
-
-{9,6},
-{9,7},
-{9,8},
-
-{10,7},
-{10,8},
-{10,9},
-{10,10},
-
-{11,8},
-{11,9},
-{11,10},
-
-{12,9},
-
-{13,9},
-{13,10},
-{13,12},
-{13,13},
-{13,14},
-{13,15},
-
-{14,10},
-{14,11},
-{14,12},
-{14,13},
-{14,14},
-{14,15},
-{14,16},
-
-{15,11},
-{15,12},
-{15,15},
-{15,16},
-{15,17},
-
-{16,17}
 };
 
 //Exits must be on the boundary of the grid
 const Coordinates_t initExits[Nexits] = {
-{0,3},
-{0,4},
-{0,15},
-{0,16},
-{19,3},
-{19,4},
-{19,15},
-{19,16}
+{0,19},
+{1,19},
+{2,19},
+{3,19}
 };
 
 
 //Assistance
 
-const int droneRadius = 4; //Nv 
-const int burningTime = 22; //Tv
+const int droneRadius = 2; //Nv 
+const int burningTime = 20; //Tv
 const int proAssistanceTime = 5; //Tfr 
 const int civAssistanceTime = 10; //Tzr
 
 const int targetFireDistance=2;
 
-const bool droneMoveHorizontally=true;
+const bool droneMoveHorizontally=false;
 const bool droneMoveVertically=false;
-const bool droneMoveCircle=false;
-const int diameter=0;
-const int droneLimitDecisionDistance=5;
+const bool droneMoveCircle=true;
+const int diameter=4;
+const int droneLimitDecisionDistance=3;
 
-const int randomness=100;
+const int randomness=1000;
+
+
+
+
+
+
+//------ END CONFIGURATIONS ------
+
+
+
+
+
+
+
 
 
 
@@ -1700,7 +1655,7 @@ system Controller,Drone,Civilian,Professional;
 	<queries>
 		<option key="--diagnostic" value="0"/>
 		<query>
-			<formula>//Model correctness
+			<formula>MODEL CORRECTNESS
 </formula>
 			<comment/>
 		</query>
@@ -1722,17 +1677,21 @@ system Controller,Drone,Civilian,Professional;
 		<query>
 			<formula>Controller.starting --&gt; Controller.finish</formula>
 			<comment/>
+			<result outcome="success" type="quality" timestamp="2024-07-20 16:19:44 +0200">
+				<option key="--diagnostic" value="0"/>
+			</result>
 		</query>
 		<query>
 			<formula/>
 			<comment/>
 		</query>
 		<query>
+			<formula>CHECK CORNER CASE COVERAGE IN TESTS</formula>
+			<comment/>
+		</query>
+		<query>
 			<formula>E&lt;&gt; (forall (i:id_civ_t) Civilian(i).safe)</formula>
 			<comment/>
-			<result outcome="failure" type="quality" timestamp="2024-07-19 12:23:34 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).callPro</formula>
@@ -1741,16 +1700,10 @@ system Controller,Drone,Civilian,Professional;
 		<query>
 			<formula>E&lt;&gt; exists (i:id_civ_t) Civilian(i).helpingCiv</formula>
 			<comment/>
-			<result outcome="failure" type="quality" timestamp="2024-07-18 11:43:33 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; exists(i:id_dro_t) Drone(i).actionNeeded</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-19 12:00:59 +0200">
-				<option key="--diagnostic" value="0"/>
-			</result>
 		</query>
 		<query>
 			<formula/>
@@ -1761,18 +1714,26 @@ system Controller,Drone,Civilian,Professional;
 			<comment>MANDATORY PROPERTIES</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; globalTime&lt;=50 and survivorsPerc&gt;=80</formula>
+			<formula>E&lt;&gt; globalTime&lt;=15 and survivorsPerc&gt;=70</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-19 15:45:03 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-20 16:39:23 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
 		</query>
 		<query>
-			<formula>A&lt;&gt; globalTime&lt;=50 and survivorsPerc &gt;=60</formula>
+			<formula>A&lt;&gt; globalTime&lt;=30 and survivorsPerc &gt;=100</formula>
 			<comment/>
-			<result outcome="success" type="quality" timestamp="2024-07-19 16:00:59 +0200">
+			<result outcome="success" type="quality" timestamp="2024-07-20 16:42:36 +0200">
 				<option key="--diagnostic" value="0"/>
 			</result>
+		</query>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+		<query>
+			<formula>sup: survivorsPerc</formula>
+			<comment/>
 		</query>
 	</queries>
 </nta>

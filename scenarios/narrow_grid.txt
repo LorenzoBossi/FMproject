@@ -1,14 +1,10 @@
-
-
-
-//----- CONFIGURATIONS -----
 //NARROW GRID SCENARIO
 
 
 //STOCHASTIC FEATURES
 //must be [0,1]
 const double pFail = 0.1;
-const double pListen= 0.8;
+const double pListen=0.9;
 
 //GRID
 
@@ -63,7 +59,7 @@ const Coordinates_t initDrones[Ndrones] = {
 
 };
 
-//Fire cells must be contiguous!!!
+//Fire cells must be contiguous
 const Coordinates_t initFires[Nfires] = {
 {0,0},
 {1,0},
@@ -101,3 +97,5 @@ const int diameter=4;
 const int droneLimitDecisionDistance=3;
 
 const int randomness=1000;
+
+
