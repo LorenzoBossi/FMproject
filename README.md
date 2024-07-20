@@ -1,10 +1,13 @@
 # FMproject
 
-- import the project.xml file to open the project with Uppaal
 - Uppaal verions 5.0.0
 
-## questions and doubts [assumption made]
+## Group:
+-  Lorenzo Bossi : 10673045
+-  Matteo Boido : 10706985
 
-- can professionals die? [no]
-- what happens if a civilians dies while being helped? [professional can move again]
-- Can a drone detect/communicate with multiple civilians in a clock cycle? [yes]
+## files
+- FMhomework.pdf: report about the project
+- project.xml: uppaal NON stochastic project
+- stochastic.xml: uppaal stochastic version of the project
+- scenarios/ : folder containing the project configurations explained in the report
